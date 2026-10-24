@@ -1,11 +1,18 @@
-# PokéSurvivor · Mundo Misterioso
+# Magical Survivor（魔力生存）
 
-Bullet-heaven con Pokémon al estilo de Survivor.io y Megabonk, con sprites de
-*Pokémon Mundo Misterioso*, capa roguelike, **966 Pokémon de las 9 generaciones**,
-shinies y gacha por región. Música y efectos compuestos para el juego.
+Fork de [PokéSurvivor](https://github.com/JPTER78/pokesurvivor) hacia un juego de
+supervivencia en el navegador con sabor de mascotas, baldosas y hambre. No es un
+clon de Magical Online / Cross Gate ni un fan game de Pokémon de aquí en adelante.
+La ruta jugable dibuja mascotas de marcador en código y no necesita `assets/pokemon/`.
 
-HTML + CSS + JavaScript vanilla sobre Canvas 2D. Sin build, sin dependencias y
-**todo local**: no necesita internet para jugar.
+Mapa del arranque, del guardado y de lo que sigue stub: [docs/MAGIC-SURVIVOR.md](docs/MAGIC-SURVIVOR.md).
+
+HTML + CSS + JavaScript vanilla sobre Canvas 2D. El humo abre `index.html` o
+`dev.html` (los dos cargan los `js/` sueltos). Hace falta un servidor local si el
+navegador bloquea `file://`.
+
+El texto de más abajo describe sistemas que el código upstream todavía tiene
+(colección, gacha, cooperativo). No es el alcance de este corte.
 
 > **Autoría / Authorship**
 >
@@ -32,8 +39,15 @@ HTML + CSS + JavaScript vanilla sobre Canvas 2D. Sin build, sin dependencias y
 
 ## Jugar
 
-Doble clic en `index.html`. Crea una cuenta o entra como invitado, haz el test
-de personalidad y a la mazmorra.
+Sirve la carpeta y abre `index.html` (o `dev.html`, la página fuente):
+
+```
+python3 -m http.server 8765
+```
+
+Entra como invitado, responde el test y pulsa Jugar. `WASD` mueve. La barra
+**Hambre** baja; a cero la run termina. Detalle de lo comprobado en
+[docs/MAGIC-SURVIVOR.md](docs/MAGIC-SURVIVOR.md).
 
 | Tecla | Acción |
 |---|---|
@@ -128,7 +142,7 @@ js/
   net/      social (apodo, amigos, salas), net (WebRTC + relé),
             coop (partida en grupo), ranking
   core/     util, db (guardado), audio (sintetizador + efectos), input,
-            sprites (animador PMD), camera
+            sprites (marcadores; hojas PMD sólo si placeholders es false), camera
   data/     pokedex*, sprites-meta*, moves, starters (+ test), enemies,
             upgrades, music (partituras)
   world/    tiles (pixel art en código), world (terreno, objetos, colisiones)

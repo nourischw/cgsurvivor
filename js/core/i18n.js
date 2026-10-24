@@ -181,7 +181,7 @@ G.I18n = (() => {
   }
 
   function startDom() {
-    document.title = t('PokéSurvivor – Juego Pokémon gratis online estilo Survivor.io');
+    document.title = t('Magical Survivor（魔力生存）– supervivencia en el navegador');
     if (lang === 'es') return;
     // Los enlaces a las páginas de la web, a su versión en inglés.
     const EN_LINKS = { 'guia/': 'en/guide/', 'pokedex/': 'en/pokedex/' };

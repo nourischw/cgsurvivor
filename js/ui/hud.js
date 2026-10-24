@@ -88,6 +88,14 @@ G.HUD = (() => {
     ctx.fillStyle = 'rgba(255,255,255,.95)';
     ctx.textAlign = 'center';
     ctx.fillText(Math.ceil(pl.hp) + ' / ' + Math.round(pl.maxHp), px + 48 + 84, py + 26);
+    if (pl.maxHunger) {
+      const hf = pl.hunger / pl.maxHunger;
+      bar(ctx, px + 48, py + 31, 168, 7, hf, hf < 0.25 ? '#e06a3a' : '#e0b45a');
+      ctx.font = F(700, 9);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = hf < 0.25 ? '#ffb089' : '#e7d7a4';
+      ctx.fillText('Hambre ' + Math.ceil(pl.hunger), px + 220, py + 38);
+    }
 
     // buffs activos
     const COL = { atk: '#ff6b4d', patk: '#ff6b4d', satk: '#c47bff', spd: '#7fe0ff', def: '#b0b8c8', regen: '#5fe08a' };
@@ -100,10 +108,10 @@ G.HUD = (() => {
       ctx.font = F(800, 9);
       const txt = LBL[k] + ' ×' + b.n;
       const tw = ctx.measureText(txt).width + 12;
-      roundRect(ctx, bx, py + 34, tw, 15, 7);
+      roundRect(ctx, bx, py + 46, tw, 15, 7);
       ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fill();
       ctx.fillStyle = COL[k];
-      ctx.fillText(txt, bx + 6, py + 45);
+      ctx.fillText(txt, bx + 6, py + 57);
       bx += tw + 5;
     }
 

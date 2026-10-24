@@ -30,6 +30,12 @@ G.Player = class Player {
 
     this.maxHp = mon.hp + (perks.hp || 0);
     this.hp = this.maxHp;
+    // Hambre de la run (no se guarda). Caminar gasta más. A 0, hurt() puro
+    // acaba en el mismo faint que un golpe. Los orbes de cura llaman a feed().
+    this.maxHunger = 100;
+    this.hunger = 100;
+    this.starveT = 0;
+    this.starving = false;
     this.baseSpd = mon.spd;
     this.baseAtk = mon.atk;
 
@@ -315,6 +321,13 @@ G.Player = class Player {
     }
   }
 
+  /** Recupera hambre (orbe de cura). No pasa del máximo. */
+  feed(amount) {
+    if (!(amount > 0) || this.dead || !this.maxHunger) return;
+    this.hunger = Math.min(this.maxHunger, this.hunger + amount);
+    if (this.hunger > 0) this.starving = false;
+  }
+
   heal(amount) {
     if (this.abil && this.abil.healMul) amount *= this.abil.healMul;     // Gula, Recogida
     const before = this.hp;
@@ -398,6 +411,22 @@ G.Player = class Player {
     // (En cooperativo la pausa no para el juego: sólo te quedas quieto.)
     const [ax, ay] = this.frozen ? [0, 0] : G.Input.axis();
     this.walking = ax !== 0 || ay !== 0;
+    // Quieto ~0,65/s (unos 2,5 min). Caminando ~2,1/s (unos 48 s). A cero,
+    // daño puro hasta el faint de siempre (game.js cierra la run).
+    this.hunger = Math.max(0, this.hunger - (this.walking ? 2.1 : 0.65) * dt);
+    if (this.hunger <= 0) {
+      if (!this.starving) {
+        this.starving = true;
+        G.FX.dmgText(this.x, this.y - this.bodyH - 18, 'Hambre', '#e0a05a');
+      }
+      this.starveT -= dt;
+      if (this.starveT <= 0) {
+        this.starveT = 0.8;
+        this.invuln = 0;
+        this.hurt(Math.max(1, this.maxHp * 0.14), null, true);
+      }
+    } else this.starving = false;
+    if (this.dead) return;
     const s = this.spd;
     // Hielo: resbalas (la velocidad cambia despacio).
     const slide = this.inLiquid && G.World.liquidEffect(this.mon.types).slide;
@@ -494,6 +523,8 @@ G.Player = class Player {
   revive(frac = 0.5) {
     this.dead = false;
     this.hp = Math.max(1, this.maxHp * frac);
+    this.hunger = Math.max(this.hunger || 0, (this.maxHunger || 100) * 0.45);
+    this.starving = false;
     this.invuln = 2;
     this.reviveT = 0;
     this.anim._start('Idle', false);

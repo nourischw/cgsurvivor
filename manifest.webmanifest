@@ -1,7 +1,7 @@
 {
-  "name": "PokéSurvivor",
-  "short_name": "PokéSurvivor",
-  "description": "Fan game gratuito: sobrevive a las hordas con tu compañero Pokémon. Sin anuncios.",
+  "name": "Magical Survivor",
+  "short_name": "魔力生存",
+  "description": "Supervivencia en el navegador: mascotas de marcador, exploración y hambre. Fork no comercial.",
   "lang": "es",
   "start_url": "./",
   "scope": "./",

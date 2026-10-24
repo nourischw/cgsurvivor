@@ -1,7 +1,8 @@
 /* ============ tiles.js — pixel art del mundo, pintado en código ============
  * Todo se pinta a resolución de ARTE (16 px por tile) escribiendo en un
- * ImageData, y luego se dibuja escalado ×G.Sprites.PX sin suavizado. Así los
- * tiles comparten tamaño de píxel con los sprites de Mundo Misterioso.
+ * ImageData, y luego se dibuja escalado ×G.Sprites.PX sin suavizado.
+ * Magical Survivor: el suelo no carga hojas externas. Sigue siendo pixel art
+ * generado aquí (biomas, muros, agua, lava).
  *
  * Autotiling: cada tile mira a sus 8 vecinos al pintarse (bordes de pared,
  * cara frontal, esquinas redondeadas, espuma de la orilla...).
