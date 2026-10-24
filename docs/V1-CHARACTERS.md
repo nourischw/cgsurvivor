@@ -65,4 +65,16 @@ El catálogo de bestias es `G.Beasts.ALL` (id 1..161, nombres de marcador). El a
 
 ## Comprobado
 
-Pendiente del humo en navegador de este corte. Se rellena al cerrar la prueba.
+Humo en Chromium el 24-10-2026 contra `http://127.0.0.1:8765/index.html` (servidor estático, viewport 1280×800). Las peticiones a `gstatic` / Firebase se cortaron a propósito para no crear una cuenta en el proyecto de producción: `G.DB.mode` quedó en `local` (`localReason` `error`, el script de Firebase no cargó). No hubo errores de página. Ninguna petición ni recurso de `performance` apuntó a `/assets/pokemon/`, Square Enix o Cross Gate. El idioma del navegador era inglés, así que el traductor del DOM pasó algunos botones a Save / Quit run; los títulos de apariencia y oficio siguieron en chino.
+
+**Invitado.** Hueco vacío → aspecto por defecto → 劍士 → 30 puntos con los `+` (6 / 10 / 4 / 6 / 4) → Minel-001 → el botón dorado (Save). El menú mostró `阿咪 · 劍士` y `Nv. 1 · Minel-001`. Jugar: `dex` 0, habilidades `job-slash`, `job-thrust`, `job-wave`, `G.Sprites.placeholders === true`, `pet.controlled === false`.
+
+**Moverse y hambre.** Con `KeyD` el humano pasó de x 0 a x 86. La mascota quedó detrás (x ≈ 50). La hambre bajó de 78.02 a 76.24 en ese tramo; antes, quieto, ya había bajado de 100 a ~78. A mitad del paso la run subió de nivel sola y el juego se paró en la carta, así que no fueron 1,5 s enteros andando.
+
+**Subir de nivel.** La experiencia de los enemigos abrió `#scr-char-lv` sin soltar orbes a mano: `阿咪 · Nv. 2 · 4 puntos libres (+4 por Level, tope 120).` Seguir estaba desactivado. Cuatro `+` en 力量 y Seguir: fuerza 10 → 14, `unspent` 0, vida máxima 115 (64 + 6×8 + 1×3). Un segundo nivel (Nv. 3, otros 4 puntos) dejó la fuerza en 18. En memoria, `G.Chars.gain` con nivel 119 y 999999 de exp devuelve 1 nivel, queda en 120 con 4 puntos y exp 0; un segundo `gain` devuelve 0 y no mueve nada.
+
+**Mascota.** Con la run en `playing`, un enemigo quieto de 9000 PV junto a la mascota: en 2,5 s `pet.hits` 0 → 2 y `pet.dmgDealt` +16 (7 + 2×0,45 por el nivel 3, dos mordiscos). Su vida bajó a 8798 porque las habilidades del espadachín también le dieron. La mascota no lee el teclado.
+
+**Tope de 2.** `createChar` del segundo (艾露, 魔術師) ok; el tercero responde `{ ok:false, error:'Máximo 2 personajes.' }`. En Personajes hay dos celdas, el aviso «Máximo 2 personajes. Borra uno para crear otro.» y las fichas `阿咪 · 劍士 · Nv.3` y `艾露 · 魔術師 · Nv.1`. No hay tercer hueco.
+
+**Cuenta local.** Crear cuenta `mslocal24` → 魔術師, 4/2/4/4/16 (magia 16), Kafen-002. `localStorage` `ps.save.mslocal24`: 1 personaje, suma de stats 30, `activeChar` 0. Tras recargar, el menú volvió a `阿咪 · 魔術師` / `Nv. 1 · Kafen-002` sin pasar por el alta. Jugar: habilidades `job-bolt`, `job-ice`, `job-burst`. `KeyD` 0,9 s: +85 en x, la mascota detrás, hambre −1,9, `controlled === false`, placeholders activos.
