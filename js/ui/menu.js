@@ -16,7 +16,10 @@ G.MenuUI = (() => {
       b.dataset.sfx = b.dataset.go === 'play' ? 'confirm' : 'click';
       b.onclick = () => {
         const go = b.dataset.go;
-        if (go === 'play') { if (G.Social.room) G.LobbyUI.open(); else G.Flow.play(); }
+        if (go === 'play') {
+          if (!G.DB.activeChar()) { G.CharUI.open(); return; }
+          if (G.Social.room) G.LobbyUI.open(); else G.Flow.play();
+        }
         else if (go === 'dex') openDex();
         else if (go === 'upgrades') openUpgrades();
         else if (go === 'shop') G.ShopUI.open();
@@ -29,6 +32,10 @@ G.MenuUI = (() => {
       };
     });
     document.querySelectorAll('[data-back]').forEach(b => { b.onclick = open; });
+    const charsBtn = $('btn-chars');
+    if (charsBtn) charsBtn.onclick = () => G.CharUI.open();
+    const allocBtn = $('btn-alloc');
+    if (allocBtn) allocBtn.onclick = () => G.CharUI.openAlloc(open);
     G.Social.on(() => { if (G.UI.isOpen('scr-menu')) socialLine(); });
     $('btn-logout').onclick = () => {
       if (G.DB.guest && !confirm('Eres invitado: se perderá todo el progreso. ¿Salir?')) return;
@@ -37,23 +44,44 @@ G.MenuUI = (() => {
     };
   }
 
+  function paintChar(ch) {
+    const app = G.Appear.BY[ch.appearanceId] || G.Appear.ALL[0];
+    const job = G.Jobs.BY[ch.jobId] || G.Jobs.ALL[0];
+    const beast = G.Beasts.BY[ch.activePetId] || G.Beasts.ALL[0];
+    const cv = $('menu-partner');
+    G.UI.stopSprite(cv);
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.imageSmoothingEnabled = false;
+    G.Appear.draw(ctx, app, 112, 168, { scale: 3, job: job.id });
+    const anim = new G.Sprites.Animator(beast.id, 1.3);
+    anim.loop('Idle');
+    G.Sprites.drawShadow(ctx, beast.id, 198, 172, 1.15);
+    anim.draw(ctx, 198, 172);
+    $('menu-partner-name').textContent = app.name + ' · ' + job.name;
+    $('menu-partner-info').textContent = 'Nv. ' + ch.level + ' · ' + beast.name + (ch.unspent > 0 ? ' · ' + ch.unspent + ' puntos' : '');
+  }
+
   // ---------------- menú principal ----------------
 
   function open() {
     const s = G.DB.save;
-    const mon = G.DEX_BY[s.partner];
-    const shiny = !!s.partnerShiny && G.DB.ownsShiny(mon.dex);
+    const ch = G.DB.activeChar();
+    if (!ch) { G.CharUI.open(); return; }
+    const mon = s.partner && G.DEX_BY[s.partner];
+    const shiny = !!(mon && s.partnerShiny && G.DB.ownsShiny(mon.dex));
     G.UI.chrome(true);
     G.UI.show('scr-menu');
     bagLine();
-    G.UI.sprite($('menu-partner'), mon.dex, { lively: true, scale: 4, hero: true, shiny });
-    $('menu-partner').style.setProperty('--stage-c', shiny ? '#9ae6ff' : G.U.TYPE_COLOR[mon.types[0]]);
-    $('menu-partner').classList.toggle('shiny', shiny);
-    $('menu-partner-name').innerHTML = mon.name + (shiny ? ' ' + G.Icons.html('shiny', 24) : '');
-    $('menu-partner-info').innerHTML = G.UI.typeChips(mon.types) + ' ' + G.UI.stars(mon.rarity);
-    // Normal / shiny a mano, aquí mismo (en el móvil no se encontraba en la ficha).
+    paintChar(ch);
+    const alloc = $('btn-alloc');
+    if (alloc) alloc.classList.toggle('hidden', !(ch.unspent > 0));
+    $('menu-partner').style.setProperty('--stage-c', '#c9a36a');
+    $('menu-partner').classList.remove('shiny');
+    // El interruptor shiny era del compañero anterior. El personaje no lo usa.
     const seg = $('menu-shiny');
-    seg.classList.toggle('hidden', !G.DB.ownsShiny(mon.dex));
+    seg.classList.add('hidden');
     seg.lastChild.innerHTML = G.Icons.html('shiny', 12) + ' Shiny';
     seg.querySelectorAll('button').forEach(b => {
       b.classList.toggle('on', (b.dataset.v === '1') === shiny);

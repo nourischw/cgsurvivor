@@ -1,7 +1,7 @@
 /* ============ game.js — flujo del juego y bucle principal ============
  *
- *   login ──> test de personalidad ──> menú ──> run ──> resumen ──> menú
- *                (sólo la 1ª vez)          │
+ *   login ──> crear / elegir personaje ──> menú ──> run ──> resumen ──> menú
+ *                (hasta 2; el test ya no)   │
  *                                          ├─ Pokémon (colección)
  *                                          ├─ Mejoras
  *                                          └─ Gacha
@@ -19,6 +19,7 @@ G.Game = (() => {
   let state = 'ui';
   let time = 0, last = 0, pendingLevels = 0;
   let pl = null;
+  let pet = null;       // mascota que sigue y pega sola (no se controla)
   let caught = [];          // shinies conseguidos en esta run
   let biome = -1;
 
@@ -105,9 +106,14 @@ G.Game = (() => {
   function startRun(coop = null) {
     holdBy = []; awayBy = null;
     const save = G.DB.save;
+    const ch = G.DB.activeChar && G.DB.activeChar();
+    if (!ch && (!save || !save.partner || !G.DEX_BY[save.partner])) {
+      if (G.CharUI) G.CharUI.open();
+      return;
+    }
     // Con su naturaleza aplicada (una copia: ver systems/mons.js).
-    const mon = G.Mons.monFor(save.partner);
-    const perks = G.Upgrades.perks(G.DB.upgradesOf(mon.dex));
+    const mon = ch ? null : G.Mons.monFor(save.partner);
+    const perks = ch ? {} : G.Upgrades.perks(G.DB.upgradesOf(mon.dex));
 
     G.UI.hideAll();
     G.UI.chrome(false);
@@ -128,35 +134,57 @@ G.Game = (() => {
     biome = 0;
     time = 0; pendingLevels = 0;
     runReal = performance.now(); tampered = false;
+    pet = null;
 
-    pl = new G.Player(mon, perks, !!save.partnerShiny && G.DB.ownsShiny(mon.dex));
+    if (ch) {
+      const app = G.Appear.BY[ch.appearanceId] || G.Appear.ALL[0];
+      const job = G.Jobs.BY[ch.jobId] || G.Jobs.ALL[0];
+      const beast = G.Beasts.BY[ch.activePetId] || G.Beasts.ALL[0];
+      const human = {
+        dex: 0, name: app.name, types: ['normal'],
+        hp: 80, spd: 100, atk: 1, pa: 1, sa: 1, df: 75, sd: 75, rarity: 1, gen: 0
+      };
+      pl = new G.Player(human, {}, false);
+      pl.char = ch;
+      pl.appearance = app;
+      pl.job = job;
+      pl.applyCharBuild(true);
+      pl.setAbility('');
+      const skills = G.Jobs.instances(job);
+      pl.moves = skills;
+      pl.slots = [skills];
+      pl.active = 0;
+      pet = new G.Pet(beast, pl);
+      G.Sprites.preload([beast.id], 8000, false);
+    } else {
+      pl = new G.Player(mon, perks, !!save.partnerShiny && G.DB.ownsShiny(mon.dex));
+      pl.setAbility(G.Mons.abilityOf(mon.dex).id);
+      // Atajos: movimientos con hueco fijo (save.pbind[dex] = [id del 1, id del 2, ...]),
+      // antes de aprender nada: addMove ya los coloca.
+      (save.pbind && save.pbind[mon.dex] || []).forEach((id, i) => { if (id) pl.bind[id] = i; });
+      pl.addMove(G.startMoveOf(mon.dex));
+      // Mejora "Veto": movimientos que no quieres que te salgan.
+      pl.banned = new Set((save.pban && save.pban[mon.dex] || []).slice(0, perks.bans));
+      // Mejora "Repertorio": un segundo movimiento de ataque, el elegido con
+      // "Segundo movimiento inicial" o, si no, al azar.
+      if (perks.startMoves >= 2) {
+        const pick2 = G.startMove2Of(mon.dex);
+        const pool = G.Moves.poolFor(mon).filter(id => !pl.hasMove(id) && !pl.banned.has(id) && G.Moves.BY_ID[id].kind !== 'buff');
+        if (pick2 && !pl.hasMove(pick2)) pl.addMove(pick2);
+        else if (pool.length) pl.addMove(G.U.pick(pool));
+        pl.setActive(0);
+      }
+      G.Sprites.preload([mon.dex], 8000, pl.shiny);
+    }
     G.Orbs.reset();
-    pl.setAbility(G.Mons.abilityOf(mon.dex).id);
     banked = { t1: 0, t10: 0 };
     caught = [];
-    // Atajos: movimientos con hueco fijo (save.pbind[dex] = [id del 1, id del 2, ...]),
-    // antes de aprender nada: addMove ya los coloca.
-    (save.pbind && save.pbind[mon.dex] || []).forEach((id, i) => { if (id) pl.bind[id] = i; });
-    pl.addMove(G.startMoveOf(mon.dex));
-    // Mejora "Veto": movimientos que no quieres que te salgan.
-    pl.banned = new Set((save.pban && save.pban[mon.dex] || []).slice(0, perks.bans));
-    // Mejora "Repertorio": un segundo movimiento de ataque, el elegido con
-    // "Segundo movimiento inicial" o, si no, al azar.
-    if (perks.startMoves >= 2) {
-      const pick2 = G.startMove2Of(mon.dex);
-      const pool = G.Moves.poolFor(mon).filter(id => !pl.hasMove(id) && !pl.banned.has(id) && G.Moves.BY_ID[id].kind !== 'buff');
-      if (pick2 && !pl.hasMove(pick2)) pl.addMove(pick2);
-      else if (pool.length) pl.addMove(G.U.pick(pool));
-      pl.setActive(0);
-    }
 
     if (coop) {
       G.Coop.begin(coop, pl, coopApi);
       G.Social.setPlaying(true);
     }
     G.Camera.x = pl.x; G.Camera.y = pl.y; G.Camera.shake = 0;
-    // Hojas de sprites locales: el compañero y los primeros enemigos.
-    G.Sprites.preload([mon.dex], 8000, pl.shiny);
     G.Audio.music(G.BIOME_MUSIC[0]);
     // Para el ranking: el servidor apunta cuándo empieza la partida (anti-trampas).
     if (!coop || G.Coop.isHost) G.Ranking.runStarted(coop ? 'g' : 's');
@@ -343,7 +371,7 @@ G.Game = (() => {
     bankTickets(false);
     save.stats.runs++;
     save.pused = save.pused || {};
-    save.pused[pl.dex] = (+save.pused[pl.dex] || 0) + 1;     // para "más usados" en la colección
+    if (pl.dex && !pl.char) save.pused[pl.dex] = (+save.pused[pl.dex] || 0) + 1;     // para "más usados" en la colección
     save.stats.totalKills += pl.kills;
     save.stats.bestTime = Math.max(save.stats.bestTime, Math.floor(time));
     if (coop) save.stats.bestGroupTime = Math.max(save.stats.bestGroupTime || 0, Math.floor(time));
@@ -363,7 +391,7 @@ G.Game = (() => {
     const mark = { t: Math.floor(time), lv: pl.level, kills: pl.kills, dmg: judge ? judge.dmg : 0 };   // dmg: a Arceus
     // Si la partida se ha tocado (ver clean()), no sube al ranking (sin avisar); lo demás, sí.
     const ok = clean();
-    const sent = ok && !coop ? G.Ranking.submitSolo(Object.assign(mark, { dex: pl.dex, shiny: pl.shiny }))
+    const sent = ok && !coop && !pl.char ? G.Ranking.submitSolo(Object.assign(mark, { dex: pl.dex, shiny: pl.shiny }))
                : ok && wasHost ? G.Ranking.submitGroup(Object.assign(mark, { members: team })) : null;
     if (sent) sent.then(b => { if (b && b.some(p => p !== 'a')) G.DB.commit(true); }).catch(() => {});
 
@@ -398,6 +426,16 @@ G.Game = (() => {
 
   function maybeLevelUp() {
     if (pendingLevels <= 0 || state !== 'playing') return;
+    // Personaje: la experiencia sube la ficha (tope 120) y se reparten los +4.
+    if (pl && pl.char) {
+      pendingLevels = 0;
+      if (!G.Coop.active && pl.char.unspent > 0 && !pl.dead) {
+        state = 'levelup';
+        G.Audio.sfx('levelup');
+        G.CharUI.showLevelUp(pl, () => { state = 'playing'; });
+      }
+      return;
+    }
     if (G.Coop.active) {
       // En grupo, las cartas salen a la vez para todos y se espera a que elijan.
       if (G.Coop.players().every(p => p.dead)) return;
@@ -697,6 +735,7 @@ G.Game = (() => {
     if (pl.dead && !coop && !G.Rift.inArena) {
       deathT += dt;
       pl.update(dt);
+      if (pet) pet.update(dt);
       G.EnemyMgr.update(dt * 0.3, pl);
       G.FX.update(dt);
       G.Camera.follow(pl.x, pl.y, dt);
@@ -716,6 +755,7 @@ G.Game = (() => {
 
     pl.frozen = coop && (G.UI.isOpen('scr-pause') || G.UI.isOpen('scr-item'));
     pl.update(dt);
+    if (pet) pet.update(dt);
     G.Orbs.update(dt, pl);
     if (coop) {
       for (const p of G.Coop.puppets()) { p.netUpdate(dt); G.Combat.ghostOrbit(p, dt, time); }
@@ -830,7 +870,9 @@ G.Game = (() => {
     ctx.save();
     ctx.scale(G.Camera.scale, G.Camera.scale);
     G.Camera.apply(ctx);
-    drawScene(G.Camera, G.Coop.active ? [pl, ...G.Coop.puppets()] : [pl]);
+    const cast = G.Coop.active ? [pl, ...G.Coop.puppets()] : [pl];
+    if (pet) cast.push(pet);
+    drawScene(G.Camera, cast);
     G.Projectiles.draw(ctx);
     G.Combat.drawAirFields(ctx);
     G.FX.draw(ctx);
@@ -976,8 +1018,8 @@ G.Game = (() => {
     quit() { if (state !== 'ui' && state !== 'over') quitRun(); },
     /** Para grabar vídeos: abre las cartas de subir de nivel. */
     debugLevelUp() { tampered = true; pl.level++; pendingLevels++; },
-    toUI() { state = 'ui'; if (cv) cv.style.cursor = ''; Backdrop.restore(); },
-    get state() { return state; }, get player() { return pl; }, st
+    toUI() { state = 'ui'; pet = null; if (cv) cv.style.cursor = ''; Backdrop.restore(); },
+    get state() { return state; }, get player() { return pl; }, get pet() { return pet; }, st
   };
 })();
 
@@ -985,7 +1027,7 @@ G.Game = (() => {
 G.Flow = {
   boot() {
     G.UI.initChrome();
-    G.LoginUI.init(); G.TestUI.init(); G.MenuUI.init(); G.GachaUI.init();
+    G.LoginUI.init(); G.CharUI.init(); G.TestUI.init(); G.MenuUI.init(); G.GachaUI.init();
     G.SocialUI.init(); G.RankingUI.init(); G.ModUI.init(); G.GoalsUI.init(); G.ProfileUI.init(); G.SettingsUI.init(); G.SupportUI.init(); G.NewsUI.init(); G.LiveUI.init(); G.Updater.init();
     // Tu nombre arriba a la derecha abre tu perfil.
     document.getElementById('user-pill').onclick = () => G.GoalsUI.open('profile');
@@ -1022,7 +1064,7 @@ G.Flow = {
   toLogin() { G.Audio.music('village'); G.LoginUI.open(); },
   afterLogin() {
     G.Audio.music('village');
-    if (!G.DB.save.partner) G.TestUI.start();
+    if (!G.DB.activeChar()) G.CharUI.open();
     else this.goMenu();
   },
   goMenu() {

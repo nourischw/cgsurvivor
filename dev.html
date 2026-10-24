@@ -179,6 +179,10 @@
       <canvas id="menu-partner" class="stage" width="260" height="200"></canvas>
       <div class="nm" id="menu-partner-name"></div>
       <div class="lv" id="menu-partner-info"></div>
+      <div class="row" style="justify-content:center;gap:8px;margin-top:8px">
+        <button id="btn-alloc" class="btn small gold hidden" type="button">Repartir puntos</button>
+        <button id="btn-chars" class="btn small ghost" type="button">Personajes</button>
+      </div>
       <div class="seg hidden" id="menu-shiny"><button data-v="0">Normal</button><button data-v="1"></button></div>
     </div>
   </div>
@@ -611,6 +615,8 @@
 <script defer src="js/data/music.js"></script>
 <script defer src="js/data/pokedex.js"></script>
 <script defer src="js/data/sprites-meta.js"></script>
+<script defer src="js/data/appearances.js"></script>
+<script defer src="js/data/beasts.js"></script>
 <!-- núcleo -->
 <script defer src="js/core/firebase-config.js"></script>
 <script defer src="js/core/db.js"></script>
@@ -622,6 +628,8 @@
 <script defer src="js/core/camera.js"></script>
 <!-- datos de juego -->
 <script defer src="js/data/moves.js"></script>
+<script defer src="js/data/jobs.js"></script>
+<script defer src="js/data/chars.js"></script>
 <script defer src="js/data/natures.js"></script>
 <script defer src="js/data/abilities.js"></script>
 <script defer src="js/data/tms.js"></script>
@@ -645,6 +653,7 @@
 <script defer src="js/entities/enemy.js"></script>
 <script defer src="js/entities/pickup.js"></script>
 <script defer src="js/entities/player.js"></script>
+<script defer src="js/entities/pet.js"></script>
 <!-- sistemas -->
 <script defer src="js/systems/stats.js"></script>
 <script defer src="js/systems/mons.js"></script>
@@ -673,6 +682,7 @@
 <script defer src="js/ui/ui.js"></script>
 <script defer src="js/ui/hud.js"></script>
 <script defer src="js/ui/login.js"></script>
+<script defer src="js/ui/char-ui.js"></script>
 <script defer src="js/ui/test.js"></script>
 <script defer src="js/ui/menu.js"></script>
 <script defer src="js/ui/slots.js"></script>

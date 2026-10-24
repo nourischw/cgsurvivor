@@ -7,7 +7,7 @@
  */
 G.UI = (() => {
   const $ = id => document.getElementById(id);
-  const SCREENS = ['scr-login', 'scr-test', 'scr-result', 'scr-starters', 'scr-menu',
+  const SCREENS = ['scr-login', 'scr-chars', 'scr-char-lv', 'scr-test', 'scr-result', 'scr-starters', 'scr-menu',
                    'scr-dex', 'scr-upgrades', 'scr-shop', 'scr-bag', 'scr-gacha', 'scr-levelup', 'scr-pause', 'scr-over',
                    'scr-nick', 'scr-friends', 'scr-lobby', 'scr-rank', 'scr-item', 'scr-goals', 'scr-bond', 'scr-mod'];
 
@@ -226,6 +226,15 @@ G.UI = (() => {
     return s;
   }
 
+  /** Deja de animar un canvas (el retrato del personaje lo pinta otro sitio). */
+  function stopSprite(cv) {
+    const prev = byCanvas.get(cv);
+    if (!prev) return;
+    live.delete(prev);
+    byCanvas.delete(cv);
+    if (io) io.unobserve(cv);
+  }
+
   function tick(dt) {
     for (const s of live) {
       if (!s.cv.isConnected) { live.delete(s); if (io) io.unobserve(s.cv); continue; }
@@ -323,5 +332,5 @@ G.UI = (() => {
   }
 
   return { $, show, hide, hideAll, isOpen, chrome, refreshCoins, toast, typeChips, stars, confirmDelete,
-           sprite, spriteCanvas, tick, initChrome, soundControls, hueSwap };
+           sprite, spriteCanvas, stopSprite, tick, initChrome, soundControls, hueSwap };
 })();

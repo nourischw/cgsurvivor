@@ -101,7 +101,10 @@ G.DB = (() => {
       missions: {},           // misiones del día / semana (systems/progress.js)
       profile: { favs: [], title: '' },   // perfil público: 3 favoritos y título
       stats: { runs: 0, bestTime: 0, bestLevel: 0, totalKills: 0, pulls: 0, coinsEarned: 0, shinies: 0,
-               bossesTotal: 0, riftWins: 0, evolutions: 0, missionsDone: 0, groupRuns: 0, bestGroupTime: 0 }
+               bossesTotal: 0, riftWins: 0, evolutions: 0, missionsDone: 0, groupRuns: 0, bestGroupTime: 0 },
+      // Magical Survivor v1: hasta 2 personajes. activeChar es el índice del que juegas.
+      chars: [],
+      activeChar: null
     };
   }
 
@@ -120,6 +123,7 @@ G.DB = (() => {
       s.pupgDone = true;
     }
     s.tickets = Object.assign({ t1: 0, t10: 0 }, s.tickets);
+    if (!Array.isArray(s.chars)) s.chars = [];
     sanitize(s);
     s.v = VERSION;
     return s;
@@ -210,6 +214,88 @@ G.DB = (() => {
         else u[id] = Math.min(G.Upgrades.BY[id].max, n(u[id]));
       }
     }
+    sanitizeChars(s);
+  }
+
+  /** Como mucho 2 fichas, con stats y nivel dentro de lo que permite v1. */
+  function sanitizeChars(s) {
+    const raw = Array.isArray(s.chars) ? s.chars : [];
+    const out = [];
+    for (const c of raw) {
+      if (out.length >= 2) break;
+      const clean = G.Chars ? G.Chars.clampChar(c) : null;
+      if (clean) out.push(clean);
+    }
+    s.chars = out;
+    if (!out.length) s.activeChar = null;
+    else if (s.activeChar == null || !out[s.activeChar]) s.activeChar = 0;
+  }
+
+  function activeChar() {
+    if (!save || !Array.isArray(save.chars) || !save.chars.length) return null;
+    const i = save.activeChar | 0;
+    return save.chars[i] || save.chars[0] || null;
+  }
+
+  function selectChar(i) {
+    if (!save || !save.chars || !save.chars[i]) return { ok: false, error: 'Ese hueco está vacío.' };
+    save.activeChar = i;
+    commit();
+    return { ok: true, char: save.chars[i] };
+  }
+
+  function createChar(spec) {
+    if (!save) return { ok: false, error: 'No hay partida.' };
+    if (!Array.isArray(save.chars)) save.chars = [];
+    if (save.chars.length >= 2) return { ok: false, error: 'Máximo 2 personajes.' };
+    const why = G.Chars ? G.Chars.invalid(spec) : 'Faltan los datos de personaje.';
+    if (why) return { ok: false, error: why };
+    const stats = {};
+    for (const k of G.Chars.KEYS) stats[k] = spec.stats[k] | 0;
+    const ch = {
+      id: 'c' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36),
+      appearanceId: spec.appearanceId | 0,
+      jobId: spec.jobId,
+      level: 1,
+      exp: 0,
+      unspent: 0,
+      stats,
+      activePetId: spec.activePetId | 0,
+      created: Date.now()
+    };
+    save.chars.push(ch);
+    save.activeChar = save.chars.length - 1;
+    commit();
+    return { ok: true, char: ch };
+  }
+
+  function deleteChar(i) {
+    if (!save || !save.chars || !save.chars[i]) return { ok: false, error: 'Ese hueco está vacío.' };
+    save.chars.splice(i, 1);
+    if (!save.chars.length) save.activeChar = null;
+    else if (save.activeChar >= save.chars.length) save.activeChar = save.chars.length - 1;
+    commit();
+    return { ok: true };
+  }
+
+  /** Suma puntos libres al personaje activo. `adds` son enteros ≥ 0. */
+  function allocStats(adds) {
+    const ch = activeChar();
+    if (!ch) return { ok: false, error: 'No hay personaje.' };
+    const keys = G.Chars ? G.Chars.KEYS : ['vit', 'str', 'def', 'spd', 'mag'];
+    let sum = 0;
+    const add = {};
+    for (const k of keys) {
+      const n = Math.floor(+((adds || {})[k]) || 0);
+      if (n < 0) return { ok: false, error: 'Los puntos no pueden bajar.' };
+      add[k] = n;
+      sum += n;
+    }
+    if (sum > (ch.unspent | 0)) return { ok: false, error: 'No tienes tantos puntos.' };
+    for (const k of keys) ch.stats[k] = (ch.stats[k] | 0) + add[k];
+    ch.unspent = (ch.unspent | 0) - sum;
+    commit();
+    return { ok: true, char: ch };
   }
 
   /**
@@ -366,7 +452,21 @@ G.DB = (() => {
     for (const k in older.stats || {}) r.stats[k] = Math.max(r.stats[k] || 0, older.stats[k] || 0);
     if (r.starter == null) r.starter = older.starter;
     if (r.personality == null) r.personality = older.personality;
+    // Personajes: se unen por id (gana la ficha más nueva) y se quedan como mucho 2.
+    r.chars = mergeChars(newer.chars, older.chars);
+    if (r.activeChar == null || !r.chars[r.activeChar]) r.activeChar = r.chars.length ? 0 : null;
     if (r.partner == null || !r.owned[r.partner]) { r.partner = older.partner; r.partnerShiny = older.partnerShiny; }
+    function mergeChars(listA, listB) {
+      const map = new Map();
+      const order = [];
+      for (const c of [...(listA || []), ...(listB || [])]) {
+        if (!c || !c.id) continue;
+        if (!map.has(c.id)) order.push(c.id);
+        const prev = map.get(c.id);
+        if (!prev || (c.created || 0) >= (prev.created || 0)) map.set(c.id, c);
+      }
+      return order.slice(0, 2).map(id => map.get(id));
+    }
     r.created = Math.min(a.created || Date.now(), b.created || Date.now());
     r.updated = Math.max(a.updated || 0, b.updated || 0);
     return r;
@@ -976,6 +1076,7 @@ G.DB = (() => {
   return {
     ready, register, login, loginWithGoogle, playAsGuest, logout, commit, deleteAccount, flush: pushNow, saveNow,
     owns, grant, ownsShiny, grantShiny, merge, setName, upgradesOf, isFav, setFav,
+    activeChar, selectChar, createChar, deleteChar, allocStats,
     onSync(fn) { listeners.add(fn); },
     onLeave(fn) { leaveHooks.push(fn); },
     /** Acceso de bajo nivel para los módulos de red (sólo en modo nube). */
