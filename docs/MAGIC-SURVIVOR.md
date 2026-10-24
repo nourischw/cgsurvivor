@@ -98,4 +98,12 @@ En `js/entities/player.js`, durante la run:
 
 ## Comprobado en este corte
 
-Pendiente del humo en el navegador de esta rama (se anota aquí al terminar): arranque, movimiento, sin petición a `assets/pokemon/`, hambre que baja y, con la hambre a cero, fin de run.
+Servidor: `python3 -m http.server 8765`. Página: `http://127.0.0.1:8765/index.html` en Chromium, ventana 1280×800, idioma del navegador en inglés.
+
+- El boot desaparece, invitado, test y menú **Magical Survivor / 魔力生存**.
+- Jugar entra en `state === 'playing'`. `G.Sprites.placeholders === true`. La hoja del jugador tiene `src` vacío (canvas, no PNG).
+- Mantener `D` ~1,5 s mueve al jugador de x=0 a x≈162. La hambre pasa de 100 a ~96,8, que cuadra con 2,1 por segundo.
+- Cero peticiones a `/assets/pokemon/`. Cero errores de consola. El único aviso es el de Firestore del SDK upstream («overriding the original host»); no corta el bucle.
+- Con la hambre forzada a 0, la run llega a `state === 'over'` y sale «Has caído…» / «You fell…». No hay crash.
+
+`document.title` lo pisa `js/core/i18n.js` al arrancar; queda en Magical Survivor, no en el título anterior.

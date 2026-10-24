@@ -277,6 +277,8 @@ G.I18n.add({
   'Mejoras': 'Upgrades', 'Haz más fuerte cada run': 'Make every run stronger', '9 regiones · Pokémon y shinies': '9 regions · Pokémon and shinies',
   '9 regiones · mascotas': '9 regions · pets', 'Puesto': 'Stall',
   'Magical Survivor se juega en horizontal.': 'Magical Survivor is played in landscape.',
+  'Magical Survivor（魔力生存）– supervivencia en el navegador': 'Magical Survivor（魔力生存）– browser survival',
+  'Hambre': 'Hunger', 'Hambre {x}': 'Hunger {x}',
   'Explora, cuida el hambre de tu mascota y sobrevive.': 'Explore, watch your pet\'s hunger, and survive.',
   'Fork de experimento. El código upstream no es de esta página.': 'Experiment fork. The upstream code is not this page.',
   'Magical Survivor necesita JavaScript para funcionar. Actívalo para jugar.': 'Magical Survivor needs JavaScript. Turn it on to play.',
