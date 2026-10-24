@@ -9,13 +9,13 @@ window.PS_PAGES = !!document.querySelector('meta[name="ps-pages"]');
 (function () {
   // El idioma lo elige locales.js (en el <head>).
   var copy = {
-    es: ['Juego de supervivencia con Pokémon, gratis en el navegador y en el móvil.', 'Cargando…'],
-    en: ['A Pokémon survival game, free in your browser and on mobile.', 'Loading…'],
-    fr: ['Un jeu de survie Pokémon gratuit sur navigateur et mobile.', 'Chargement…'],
-    it: ['Un gioco di sopravvivenza Pokémon gratuito su browser e cellulare.', 'Caricamento…'],
-    'pt-BR': ['Um jogo de sobrevivência Pokémon grátis no navegador e no celular.', 'Carregando…'],
-    'zh-Hans': ['免费的宝可梦生存游戏，可在浏览器和手机上游玩。', '加载中…'],
-    'zh-Hant': ['免費的寶可夢生存遊戲，可在瀏覽器與手機上遊玩。', '載入中…']
+    es: ['Magical Survivor（魔力生存）: explora, cuida el hambre y sobrevive.', 'Cargando…'],
+    en: ['Magical Survivor（魔力生存）: explore, watch your hunger, survive.', 'Loading…'],
+    fr: ['Magical Survivor（魔力生存）: explore, surveille la faim, survis.', 'Chargement…'],
+    it: ['Magical Survivor（魔力生存）: esplora, tieni d’occhio la fame, sopravvivi.', 'Caricamento…'],
+    'pt-BR': ['Magical Survivor（魔力生存）: explore, cuide da fome e sobreviva.', 'Carregando…'],
+    'zh-Hans': ['Magical Survivor（魔力生存）：探索、留意饥饿、活下去。', '加载中…'],
+    'zh-Hant': ['Magical Survivor（魔力生存）：探索、留意飢餓、活下去。', '載入中…']
   }[window.PS_LOCALES && window.PS_LOCALES.lang];
   if (!copy) return;
   var p = document.querySelectorAll('#boot p');

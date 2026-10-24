@@ -1,6 +1,9 @@
-/* ============ sprites.js — sprites estilo Mundo Misterioso (locales) ============
- * Hojas de SpriteCollab en assets/pokemon/{dex}/{Anim}.png, geometría en
- * G.SPRITE_META (js/data/sprites-meta.js, generado por tools/fetch_sprites.py).
+/* ============ sprites.js — mascotas de la ruta jugable ============
+ * Magical Survivor: PLACEHOLDER_PETS dibuja mascotas originales en un canvas
+ * (mancha, orejas, cola) y no pide assets/pokemon/. La geometría PMD de
+ * G.SPRITE_META sigue sirviendo para saber si hay shiny o si flota (hv).
+ * Con el flag a false se vuelve a cargar SpriteCollab:
+ *   assets/pokemon/{dex}/{Anim}.png
  *
  *   columnas = fotogramas · filas = 8 direcciones
  *   0 Down · 1 DownRight · 2 Right · 3 UpRight · 4 Up · 5 UpLeft · 6 Left · 7 DownLeft
@@ -12,7 +15,15 @@
 G.Sprites = (() => {
   /** Unidades de mundo por píxel de arte. Tiles y sprites comparten escala. */
   const PX = 2;
+  /**
+   * true: la partida no descarga hojas PMD. Ponlo a false para volver a
+   * assets/pokemon/ (siguen en el repo; no hacen falta para el humo).
+   */
+  const PLACEHOLDER_PETS = true;
+  const PH_W = 32, PH_H = 32, PH_N = 4, PH_R = 8;
+  const PH_GEOM = { w: PH_W, h: PH_H, n: PH_N, r: PH_R, d: [8, 8, 8, 8], ax: 16, ay: 28 };
   const sheets = new Map();          // "dex/Anim[/s]" -> {img, ready, failed}
+  const pets = new Map();            // "dex[/s]" -> canvas de marcador
 
   function meta(dex) { return G.SPRITE_META[dex] || null; }
 
@@ -58,6 +69,7 @@ G.Sprites = (() => {
 
   /** Geometría de una animación (la shiny sólo difiere en casos raros). */
   function animMeta(dex, anim, shiny = false) {
+    if (PLACEHOLDER_PETS) return PH_GEOM;
     const m = meta(dex);
     if (!m) return null;
     const name = animName(dex, anim, shiny);
@@ -74,12 +86,72 @@ G.Sprites = (() => {
     const drop = old.slice(0, Math.max(sheets.size - Math.floor(MAX_SHEETS * 0.75), 0));
     for (const [k, s] of drop) {
       sheets.delete(k);
+      if (s.placeholder) continue;
       s.img.onload = s.img.onerror = null;
       s.img.src = '';                 // suelta la imagen decodificada
     }
   }
 
+  /** Mascota original: 4 fotogramas × 8 direcciones, sin arte de terceros. */
+  function petCanvas(dex, shiny) {
+    const key = dex + (shiny ? '/s' : '');
+    let c = pets.get(key);
+    if (c) return c;
+    c = document.createElement('canvas');
+    c.width = PH_W * PH_N;
+    c.height = PH_H * PH_R;
+    const g = c.getContext('2d');
+    const n = (Number(dex) || 1) >>> 0;
+    const hue = (n * 47) % 360;
+    const body = `hsl(${hue} ${shiny ? 78 : 58}% ${shiny ? 62 : 48}%)`;
+    const ear = `hsl(${(hue + 28) % 360} ${shiny ? 80 : 50}% ${shiny ? 74 : 62}%)`;
+    const ink = shiny ? '#3a2a08' : '#1c140c';
+    // 0 abajo · 2 derecha · 4 arriba · 6 izquierda · impares en diagonal
+    const lookX = [0, 1, 2, 1, 0, -1, -2, -1];
+    const lookY = [2, 1, 0, -1, -2, -1, 0, 1];
+    for (let row = 0; row < PH_R; row++) {
+      for (let f = 0; f < PH_N; f++) {
+        const ox = f * PH_W, oy = row * PH_H;
+        const bob = f % 2;
+        const step = f < 2 ? 0 : 1;
+        g.fillStyle = shiny ? '#ffe14a' : '#2a241c';
+        g.fillRect(ox + 7, oy + 6 + bob, 18, 18);
+        g.fillStyle = body;
+        g.fillRect(ox + 8, oy + 8 + bob, 16, 14);
+        g.fillStyle = ear;
+        g.fillRect(ox + 8, oy + 5 + bob, 4, 5);
+        g.fillRect(ox + 20, oy + 5 + bob, 4, 5);
+        g.fillStyle = body;
+        g.fillRect(ox + (row >= 3 && row <= 5 ? 4 : 22), oy + 14 + bob, 4, 3);
+        g.fillStyle = ink;
+        const ex = 12 + lookX[row], ey = 13 + lookY[row] + bob;
+        g.fillRect(ox + ex, oy + ey, 2, 2);
+        g.fillRect(ox + ex + 6, oy + ey, 2, 2);
+        g.fillStyle = '#3a2a22';
+        g.fillRect(ox + 10 + step, oy + 22 + bob, 4, 3);
+        g.fillRect(ox + 18 - step, oy + 22 + bob, 4, 3);
+      }
+    }
+    pets.set(key, c);
+    return c;
+  }
+
+  function placeholderSheet(dex, _anim, shiny) {
+    const m = meta(dex);
+    shiny = !!(shiny && m && m.sh);
+    const k = 'ph/' + dex + (shiny ? '/s' : '');
+    let s = sheets.get(k);
+    const now = Date.now();
+    if (s) { s.at = now; return s; }
+    if (sheets.size >= MAX_SHEETS) evict(now);
+    s = { ready: true, failed: false, placeholder: true, img: petCanvas(dex, shiny),
+          tries: 0, retryAt: 0, at: now, src: '' };
+    sheets.set(k, s);
+    return s;
+  }
+
   function sheet(dex, anim, shiny = false) {
+    if (PLACEHOLDER_PETS) return placeholderSheet(dex, anim, shiny);
     const m = meta(dex);
     shiny = shiny && !!(m && m.sh);
     const name = animName(dex, anim, shiny);
@@ -279,5 +351,6 @@ G.Sprites = (() => {
   }
 
   return { PX, meta, hasShiny, hovers, white, animMeta, sheet, preload, dirFromAngle, bodyRadius, bodyHeight, playerScale, playerRadius,
-           drawShadow, Animator, ANIMS, get sheetCount() { return sheets.size; } };
+           drawShadow, Animator, ANIMS, placeholders: PLACEHOLDER_PETS,
+           get sheetCount() { return sheets.size; } };
 })();

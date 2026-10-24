@@ -27,11 +27,11 @@
     const en = typeof G === 'object' && G.I18n ? G.I18n.lang === 'en' : !/^es/i.test(navigator.language || '');
     const el = document.getElementById('boot');
     el.setAttribute('translate', 'no');
-    el.innerHTML = '<div class="boot-in"><h1>PokéSurvivor</h1>' + (en
+    el.innerHTML = '<div class="boot-in"><h1>Magical Survivor</h1>' + (en
       ? '<p><b>We are under maintenance.</b></p><p>We are moving the game to new servers so it can stay free for everyone. ' +
-        'Your account, your save and your Pokémon are safe. Please come back in a few hours!</p>'
+        'Your account and your save are safe. Please come back in a few hours!</p>'
       : '<p><b>Estamos en mantenimiento.</b></p><p>Estamos mudando el juego a servidores nuevos para que siga siendo gratis para todos. ' +
-        'Tu cuenta, tu partida y tus Pokémon están a salvo. ¡Vuelve en unas horas!</p>') +
+        'Tu cuenta y tu partida están a salvo. ¡Vuelve en unas horas!</p>') +
       '<button class="btn gold" style="margin-top:12px">' + (en ? 'Try again' : 'Volver a intentarlo') + '</button></div>';
     el.querySelector('button').onclick = () => location.reload();
     if (typeof G === 'object' && G.I18n && !en) { el.removeAttribute('translate'); G.I18n.walk(el); }

@@ -126,12 +126,13 @@ G.SettingsUI = (() => {
     } else if (tab === 'acc') {
       renderAccount(box);
     } else {
-      box.innerHTML = `<div class="about-logo">PokéSurvivor</div><p class="sub center">Versión ${esc(VERSION)}</p>`
-        + `<p class="sub">Juego de fans <b>gratuito y sin ánimo de lucro</b>: sin anuncios ni compras. Pokémon y sus personajes son propiedad de Nintendo, Creatures y GAME FREAK; este proyecto no está afiliado a ellos.</p>`
+      box.innerHTML = `<div class="about-logo">Magical Survivor</div><p class="sub center">Versión ${esc(VERSION)}</p>`
+        + `<p class="sub"><b>Magical Survivor</b>（魔力生存）es un fork no comercial. Las mascotas de la partida son marcadores dibujados en código y el suelo también. Los nombres que quedan en la colección vienen del proyecto anterior (Pokémon: Nintendo, Creatures, GAME FREAK). No hay cesión ni arte oficial de Square Enix / Magical Online.</p>`
         + section('Créditos')
         + `<ul class="credits">
-             <li><b>Sprites:</b> PMD SpriteCollab y sus artistas (CC BY-NC 4.0).</li>
-             <li><b>Datos de los Pokémon:</b> PokéAPI.</li>
+             <li><b>Mascotas en partida:</b> marcadores originales (<code>js/core/sprites.js</code>). Las hojas PMD no se piden.</li>
+             <li><b>assets/pokemon/ (sin usar en la ruta jugable):</b> PMD SpriteCollab, CC BY-NC 4.0.</li>
+             <li><b>Datos que siguen en js/data:</b> PokéAPI.</li>
              <li><b>Música y sonidos:</b> originales, generados por el propio juego.</li>
              <li><b>Fuente:</b> Pixelify Sans (OFL).</li>
            </ul>`

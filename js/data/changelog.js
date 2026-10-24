@@ -6,6 +6,12 @@
  * Cada línea en español y en inglés.
  */
 G.CHANGELOG = [
+  { d: '2026-10-24', title: ['Magical Survivor: mascotas de marcador y hambre', 'Magical Survivor: placeholder pets and hunger'], new: [
+    ['La ruta jugable pasa a llamarse Magical Survivor（魔力生存）. Las mascotas se dibujan en código y la partida no descarga las hojas de sprites anteriores.',
+     'The playable path is now Magical Survivor（魔力生存）. Pets are drawn in code, and a run no longer downloads the old sprite sheets.'],
+    ['Hambre: baja durante la partida (más rápido si caminas). Si llega a cero, pierdes vida hasta caer. Un orbe de cura también recupera hambre.',
+     'Hunger: it drops during a run (faster while you walk). At zero you lose HP until you fall. A heal orb also restores hunger.']
+  ] },
   { d: '2026-10-23', title: ['Ranking de daño a Arceus y Tablas', 'Arceus damage ranking and Plates'], new: [
     ["Botón de YouTube arriba, junto a Novedades: lleva al canal del juego y, cuando hay directo, se pone rojo con «EN DIRECTO» y te lleva a verlo.",
      "YouTube button at the top, next to What's new: it takes you to the game's channel and, when there is a live stream, it turns red with \"LIVE\" and takes you to watch it."],

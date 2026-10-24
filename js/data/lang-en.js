@@ -273,8 +273,14 @@ G.I18n.add({
   'Tu amabilidad tranquiliza a todos los que te rodean.': 'Your kindness calms everyone around you.',
 
   // ---------------- menú ----------------
-  'Jugar': 'Play', 'Entra en la mazmorra': 'Enter the dungeon', 'Pokémon': 'Pokémon', 'Tu colección': 'Your collection',
+  'Jugar': 'Play', 'Entra en la mazmorra': 'Enter the dungeon', 'Pokémon': 'Pokémon', 'Mascotas': 'Pets', 'Tu colección': 'Your collection',
   'Mejoras': 'Upgrades', 'Haz más fuerte cada run': 'Make every run stronger', '9 regiones · Pokémon y shinies': '9 regions · Pokémon and shinies',
+  '9 regiones · mascotas': '9 regions · pets', 'Puesto': 'Stall',
+  'Magical Survivor se juega en horizontal.': 'Magical Survivor is played in landscape.',
+  'Explora, cuida el hambre de tu mascota y sobrevive.': 'Explore, watch your pet\'s hunger, and survive.',
+  'Fork de experimento. El código upstream no es de esta página.': 'Experiment fork. The upstream code is not this page.',
+  'Magical Survivor necesita JavaScript para funcionar. Actívalo para jugar.': 'Magical Survivor needs JavaScript. Turn it on to play.',
+  'Supervivencia en el navegador: mascota de marcador, mapa de baldosas y hambre. Sin arte oficial de Magical Online.': 'Browser survival: a placeholder pet, tile map, and hunger. No official Magical Online art.',
   'Misiones': 'Missions', 'Misiones, logros y perfil': 'Missions, achievements and profile', 'Amigos': 'Friends', 'Juega en grupo, hasta 4': 'Play in a group, up to 4',
   'Ranking': 'Leaderboard', 'Quién aguanta más': 'Who survives longest', 'Ajustes': 'Settings', 'Sonido, gráficos, controles y cuenta': 'Sound, graphics, controls and account',
   '{x} premio por recoger': '{x} reward to claim', '{x} premios por recoger': '{x} rewards to claim', 'premio por recoger': 'reward to claim', 'premios por recoger': 'rewards to claim',
