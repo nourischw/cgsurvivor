@@ -238,7 +238,7 @@ G.DB = (() => {
   }
 
   function selectChar(i) {
-    if (!save || !save.chars || !save.chars[i]) return { ok: false, error: 'Ese hueco está vacío.' };
+    if (!save || !save.chars || !save.chars[i]) return { ok: false, error: 'That slot is empty.' };
     save.activeChar = i;
     commit();
     return { ok: true, char: save.chars[i] };
@@ -247,8 +247,8 @@ G.DB = (() => {
   function createChar(spec) {
     if (!save) return { ok: false, error: 'No hay partida.' };
     if (!Array.isArray(save.chars)) save.chars = [];
-    if (save.chars.length >= 2) return { ok: false, error: 'Máximo 2 personajes.' };
-    const why = G.Chars ? G.Chars.invalid(spec) : 'Faltan los datos de personaje.';
+    if (save.chars.length >= 2) return { ok: false, error: 'Maximum of 2 characters.' };
+    const why = G.Chars ? G.Chars.invalid(spec) : 'Missing character data.';
     if (why) return { ok: false, error: why };
     const stats = {};
     for (const k of G.Chars.KEYS) stats[k] = spec.stats[k] | 0;
@@ -270,7 +270,7 @@ G.DB = (() => {
   }
 
   function deleteChar(i) {
-    if (!save || !save.chars || !save.chars[i]) return { ok: false, error: 'Ese hueco está vacío.' };
+    if (!save || !save.chars || !save.chars[i]) return { ok: false, error: 'That slot is empty.' };
     save.chars.splice(i, 1);
     if (!save.chars.length) save.activeChar = null;
     else if (save.activeChar >= save.chars.length) save.activeChar = save.chars.length - 1;
@@ -281,17 +281,17 @@ G.DB = (() => {
   /** Suma puntos libres al personaje activo. `adds` son enteros ≥ 0. */
   function allocStats(adds) {
     const ch = activeChar();
-    if (!ch) return { ok: false, error: 'No hay personaje.' };
+    if (!ch) return { ok: false, error: 'No character.' };
     const keys = G.Chars ? G.Chars.KEYS : ['vit', 'str', 'def', 'spd', 'mag'];
     let sum = 0;
     const add = {};
     for (const k of keys) {
       const n = Math.floor(+((adds || {})[k]) || 0);
-      if (n < 0) return { ok: false, error: 'Los puntos no pueden bajar.' };
+      if (n < 0) return { ok: false, error: 'Points cannot go down.' };
       add[k] = n;
       sum += n;
     }
-    if (sum > (ch.unspent | 0)) return { ok: false, error: 'No tienes tantos puntos.' };
+    if (sum > (ch.unspent | 0)) return { ok: false, error: 'You do not have that many points.' };
     for (const k of keys) ch.stats[k] = (ch.stats[k] | 0) + add[k];
     ch.unspent = (ch.unspent | 0) - sum;
     commit();

@@ -10,11 +10,11 @@ G.Chars = (() => {
   const PER_LEVEL = 4;
   const KEYS = ['vit', 'str', 'def', 'spd', 'mag'];
   const LABEL = {
-    vit: '體力 Vitalidad',
-    str: '力量 Fuerza',
-    def: '強度 Defensa',
-    spd: '速度 Velocidad',
-    mag: '魔法 Magia'
+    vit: '體力 Vitality',
+    str: '力量 Strength',
+    def: '強度 Defense',
+    spd: '速度 Speed',
+    mag: '魔法 Magic'
   };
 
   function blank() { return { vit: 0, str: 0, def: 0, spd: 0, mag: 0 }; }
@@ -34,21 +34,21 @@ G.Chars = (() => {
 
   /** null si el alta es válida; si no, el motivo. */
   function invalid(spec) {
-    if (!spec) return 'Faltan los datos.';
+    if (!spec) return 'Missing data.';
     const app = G.Appear && G.Appear.BY[spec.appearanceId | 0];
-    if (!app) return 'Elige una apariencia.';
+    if (!app) return 'Choose an appearance.';
     const job = G.Jobs && G.Jobs.BY[spec.jobId];
-    if (!job) return 'Elige un oficio.';
+    if (!job) return 'Choose a job.';
     const petId = spec.activePetId | 0;
     const pet = G.Beasts && G.Beasts.BY[petId];
-    if (!pet || petId < 1 || petId > G.Beasts.MAX_ID) return 'Elige una mascota.';
+    if (!pet || petId < 1 || petId > G.Beasts.MAX_ID) return 'Choose a pet.';
     const stats = spec.stats || {};
     for (const k of KEYS) {
       const v = stats[k];
-      if (!Number.isInteger(v) && !(typeof v === 'number' && v === Math.floor(v))) return 'Los puntos tienen que ser enteros.';
-      if (v < 0) return 'Un stat no puede quedar por debajo de cero.';
+      if (!Number.isInteger(v) && !(typeof v === 'number' && v === Math.floor(v))) return 'Points have to be whole numbers.';
+      if (v < 0) return 'A stat cannot go below zero.';
     }
-    if (sumStats(stats) !== CREATE) return 'Reparte los ' + CREATE + ' puntos.';
+    if (sumStats(stats) !== CREATE) return 'Spend all ' + CREATE + ' points.';
     return null;
   }
 

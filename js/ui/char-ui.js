@@ -13,9 +13,9 @@ G.CharUI = (() => {
     if ($('scr-chars')) return;
     const host = document.createElement('div');
     host.innerHTML =
-      `<section id="scr-chars" class="scr dim hidden">
+      `<section id="scr-chars" class="scr dim hidden" translate="no">
         <div class="box wide char-box">
-          <h2 id="char-title">Personajes</h2>
+          <h2 id="char-title">Characters</h2>
           <p class="sub" id="char-sub"></p>
           <div id="char-steps" class="char-steps"></div>
           <div id="char-body"></div>
@@ -23,13 +23,13 @@ G.CharUI = (() => {
           <div class="row between" id="char-nav" style="margin-top:12px"></div>
         </div>
       </section>
-      <section id="scr-char-lv" class="scr dim hidden">
+      <section id="scr-char-lv" class="scr dim hidden" translate="no">
         <div class="box" style="width:min(480px,100%)">
-          <h2>Subes de nivel</h2>
+          <h2>Level up</h2>
           <p class="sub" id="clv-sub"></p>
           <div id="clv-stats"></div>
           <p id="clv-err" class="err"></p>
-          <button id="clv-ok" class="btn gold" type="button" style="width:100%;margin-top:8px">Seguir</button>
+          <button id="clv-ok" class="btn gold" type="button" style="width:100%;margin-top:8px">Continue</button>
         </div>
       </section>`;
     while (host.firstChild) document.body.appendChild(host.firstChild);
@@ -66,7 +66,7 @@ G.CharUI = (() => {
   function render() {
     err('');
     const title = $('char-title'), sub = $('char-sub'), body = $('char-body'), nav = $('char-nav'), steps = $('char-steps');
-    const labels = { look: 'Apariencia', job: 'Oficio', stats: 'Puntos', pet: 'Mascota' };
+    const labels = { look: 'Appearance', job: 'Job', stats: 'Points', pet: 'Pet' };
     steps.innerHTML = step === 'slots' ? '' : ['look', 'job', 'stats', 'pet'].map(k =>
       `<i class="${k === step ? 'on' : ''}">${labels[k]}</i>`).join('');
     body.innerHTML = '';
@@ -80,8 +80,8 @@ G.CharUI = (() => {
 
   function renderSlots(title, sub, body, nav) {
     const list = (G.DB.save && G.DB.save.chars) || [];
-    title.textContent = 'Elige personaje';
-    sub.textContent = `Hasta ${G.Chars.MAX} por cuenta. El oficio se elige aparte del aspecto.`;
+    title.textContent = 'Choose a character';
+    sub.textContent = `Up to ${G.Chars.MAX} per account. The job is separate from the look.`;
     const grid = document.createElement('div');
     grid.className = 'grid';
     for (let i = 0; i < G.Chars.MAX; i++) {
@@ -97,7 +97,7 @@ G.CharUI = (() => {
         const ctx = cv.getContext('2d');
         G.Appear.draw(ctx, app, 48, 68, { scale: 2.2, job: ch.jobId });
         cell.appendChild(cv);
-        cell.insertAdjacentHTML('beforeend', `<b>${app.name}</b><small>${job ? job.name : ''} · Nv.${ch.level}</small>`);
+        cell.insertAdjacentHTML('beforeend', `<b>${app.name}</b><small>${job ? job.name : ''} · Lv.${ch.level}</small>`);
         cell.title = pet ? pet.name : '';
         cell.onclick = () => {
           const r = G.DB.selectChar(i);
@@ -108,18 +108,18 @@ G.CharUI = (() => {
         const del = document.createElement('button');
         del.className = 'btn small ghost';
         del.type = 'button';
-        del.textContent = 'Borrar';
+        del.textContent = 'Delete';
         del.onclick = ev => {
           ev.stopPropagation();
-          if (!confirm('¿Borrar este personaje?')) return;
+          if (!confirm('Delete this character?')) return;
           G.DB.deleteChar(i);
           render();
         };
         cell.appendChild(del);
       } else {
-        cell.insertAdjacentHTML('beforeend', `<b>Hueco ${i + 1}</b><small>Vacío</small>`);
+        cell.insertAdjacentHTML('beforeend', `<b>Slot ${i + 1}</b><small>Empty</small>`);
         cell.onclick = () => {
-          if (list.length >= G.Chars.MAX) { err('Máximo 2 personajes.'); return; }
+          if (list.length >= G.Chars.MAX) { err('Maximum of 2 characters.'); return; }
           draft = fresh();
           pool = G.Chars.CREATE;
           step = 'look';
@@ -132,28 +132,28 @@ G.CharUI = (() => {
     if (list.length >= G.Chars.MAX) {
       const note = document.createElement('p');
       note.className = 'note';
-      note.textContent = 'Máximo 2 personajes. Borra uno para crear otro.';
+      note.textContent = 'Maximum of 2 characters. Delete one to create another.';
       body.appendChild(note);
     }
     const back = document.createElement('button');
     back.className = 'btn ghost';
     back.type = 'button';
-    back.textContent = list.length ? 'Volver al menú' : 'Salir';
+    back.textContent = list.length ? 'Back to menu' : 'Back';
     back.onclick = () => { if (list.length) G.Flow.goMenu(); else G.Flow.toLogin(); };
     nav.appendChild(back);
     if (list.length) {
       const play = document.createElement('button');
       play.className = 'btn gold';
       play.type = 'button';
-      play.textContent = 'Jugar';
+      play.textContent = 'Play';
       play.onclick = () => G.Flow.play();
       nav.appendChild(play);
     }
   }
 
   function renderLook(title, sub, body, nav) {
-    title.textContent = 'Apariencia';
-    sub.textContent = 'Sólo es el aspecto. El oficio va después. Dibujo de marcador, sin arte oficial.';
+    title.textContent = 'Appearance';
+    sub.textContent = 'Look only. The job comes next. Placeholder drawing, no official art.';
     const grid = document.createElement('div');
     grid.className = 'grid';
     for (const a of G.Appear.ALL) {
@@ -169,12 +169,12 @@ G.CharUI = (() => {
     }
     body.appendChild(grid);
     nav.appendChild(backBtn(() => { step = 'slots'; render(); }));
-    nav.appendChild(nextBtn('Oficio', () => { step = 'job'; render(); }));
+    nav.appendChild(nextBtn('Job', () => { step = 'job'; render(); }));
   }
 
   function renderJob(title, sub, body, nav) {
-    title.textContent = 'Oficio';
-    sub.textContent = 'Las habilidades salen solas en la run. La fuerza o la magia cambian cuánto pegan.';
+    title.textContent = 'Job';
+    sub.textContent = 'Skills fire on their own during the run. Strength or magic changes how hard they hit.';
     const grid = document.createElement('div');
     grid.className = 'grid';
     grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(180px, 1fr))';
@@ -183,26 +183,26 @@ G.CharUI = (() => {
       cell.className = 'cell' + (draft.jobId === j.id ? ' on' : '');
       cell.style.textAlign = 'left';
       cell.style.padding = '8px';
-      const stat = j.stat === 'mag' ? '魔法' : '力量';
+      const stat = j.stat === 'mag' ? '魔法 Magic' : '力量 Strength';
       cell.innerHTML = `<b>${j.name}</b><small>${j.gloss} · ${stat}</small><small>${j.blurb}</small><small>${j.skills.map(s => s.name).join(' · ')}</small>`;
       cell.onclick = () => { draft.jobId = j.id; render(); };
       grid.appendChild(cell);
     }
     body.appendChild(grid);
     nav.appendChild(backBtn(() => { step = 'look'; render(); }));
-    nav.appendChild(nextBtn('Puntos', () => { step = 'stats'; pool = G.Chars.CREATE - G.Chars.sumStats(draft.stats); render(); }));
+    nav.appendChild(nextBtn('Points', () => { step = 'stats'; pool = G.Chars.CREATE - G.Chars.sumStats(draft.stats); render(); }));
   }
 
   function renderStatsStep(title, sub, body, nav) {
-    title.textContent = 'Reparte 30 puntos';
-    sub.textContent = '體力 vida · 力量 daño físico · 強度 menos daño recibido · 速度 moverte y recargas · 魔法 daño mágico.';
+    title.textContent = 'Spend 30 points';
+    sub.textContent = '體力 health · 力量 physical damage · 強度 less damage taken · 速度 movement and cooldowns · 魔法 magic damage.';
     body.appendChild(statBlock(draft.stats, () => pool, d => { pool -= d; }, () => render()));
     const left = document.createElement('p');
-    left.innerHTML = `Te quedan <b class="gold">${pool}</b> puntos.`;
+    left.innerHTML = `<b class="gold">${pool}</b> points left.`;
     body.appendChild(left);
     nav.appendChild(backBtn(() => { step = 'job'; render(); }));
-    const ok = nextBtn('Mascota', () => {
-      if (pool !== 0 || G.Chars.sumStats(draft.stats) !== G.Chars.CREATE) { err('Reparte los 30 puntos.'); return; }
+    const ok = nextBtn('Pet', () => {
+      if (pool !== 0 || G.Chars.sumStats(draft.stats) !== G.Chars.CREATE) { err('Spend all 30 points.'); return; }
       step = 'pet';
       render();
     });
@@ -211,8 +211,8 @@ G.CharUI = (() => {
   }
 
   function renderPet(title, sub, body, nav) {
-    title.textContent = 'Mascota inicial';
-    sub.textContent = `Bestias de marcador. El catálogo llega al id ${G.Beasts.MAX_ID}; aquí eliges una de inicio. Ella ataca sola.`;
+    title.textContent = 'Starting pet';
+    sub.textContent = `Placeholder beasts. The catalog goes up to id ${G.Beasts.MAX_ID}; pick a starter here. It attacks on its own.`;
     const grid = document.createElement('div');
     grid.className = 'grid';
     for (const b of G.Beasts.STARTERS) {
@@ -225,15 +225,15 @@ G.CharUI = (() => {
     }
     body.appendChild(grid);
     nav.appendChild(backBtn(() => { step = 'stats'; render(); }));
-    const ok = nextBtn('Guardar', saveDraft);
+    const ok = nextBtn('Save', saveDraft);
     nav.appendChild(ok);
   }
 
   function saveDraft() {
     const r = G.DB.createChar(draft);
-    if (!r.ok) { err(r.error || 'No se pudo crear.'); return; }
+    if (!r.ok) { err(r.error || 'Could not create.'); return; }
     G.Audio.sfx('confirm');
-    G.UI.toast(G.Appear.BY[r.char.appearanceId].name + ' está listo');
+    G.UI.toast(G.Appear.BY[r.char.appearanceId].name + ' is ready');
     G.Flow.goMenu();
   }
 
@@ -241,7 +241,7 @@ G.CharUI = (() => {
     const b = document.createElement('button');
     b.className = 'btn ghost';
     b.type = 'button';
-    b.textContent = 'Atrás';
+    b.textContent = 'Back';
     b.onclick = fn;
     return b;
   }
@@ -292,7 +292,7 @@ G.CharUI = (() => {
     const ch = ent.char;
     addDraft = G.Chars.blank();
     const who = (G.Appear.BY[ch.appearanceId] || G.Appear.ALL[0]).name;
-    $('clv-sub').textContent = `${who} · Nv. ${ch.level} · ${ch.unspent} puntos libres (+${G.Chars.PER_LEVEL} por nivel, tope ${G.Chars.CAP}).`;
+    $('clv-sub').textContent = `${who} · Lv. ${ch.level} · ${ch.unspent} points left (+${G.Chars.PER_LEVEL} per level, cap ${G.Chars.CAP}).`;
     $('clv-err').textContent = '';
     paintLevel(ch);
     G.UI.show('scr-char-lv');
@@ -326,7 +326,7 @@ G.CharUI = (() => {
       box.appendChild(row);
     }
     const note = document.createElement('p');
-    note.innerHTML = `Sin repartir: <b class="gold">${left()}</b>`;
+    note.innerHTML = `Unspent: <b class="gold">${left()}</b>`;
     box.appendChild(note);
     $('clv-ok').disabled = left() !== 0;
   }
@@ -336,9 +336,9 @@ G.CharUI = (() => {
     const ch = ent && ent.char;
     if (!ch) { finishLevel(); return; }
     const left = (ch.unspent | 0) - G.Chars.sumStats(addDraft);
-    if (left !== 0) { $('clv-err').textContent = 'Reparte todos los puntos.'; return; }
+    if (left !== 0) { $('clv-err').textContent = 'Spend all the points.'; return; }
     const r = G.DB.allocStats(addDraft);
-    if (!r.ok) { $('clv-err').textContent = r.error || 'No se pudo guardar.'; return; }
+    if (!r.ok) { $('clv-err').textContent = r.error || 'Could not save.'; return; }
     if (ent.applyCharBuild) ent.applyCharBuild(false);
     G.Audio.sfx('confirm');
     finishLevel();

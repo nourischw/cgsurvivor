@@ -1,6 +1,7 @@
 /* ============ locales.js — idioma del jugador (antes que nada) ============
  * Lo usan la pantalla de carga (boot.js) y el juego (i18n.js). No guarda nada del jugador.
- * Idioma: el elegido en Ajustes; si no, /en/ en la dirección o el del navegador.
+ * Language: the one saved from Settings. This fork otherwise starts in English
+ * and does not follow the browser language.
  *
  * Francés, italiano, portugués y chino: aquí mismo se pide su diccionario,
  * js/lang/<idioma>.js (lo genera tools/build.js), antes que el juego, para que
@@ -26,8 +27,8 @@ window.PS_LOCALES = (() => {
   }
   let saved;
   try { saved = localStorage.getItem('ps.lang'); } catch (e) { /* storage can be blocked */ }
-  const lang = normalize(saved) || (/\/en(\/|$)/.test(location.pathname) ? 'en' : null)
-    || normalize((navigator.languages && navigator.languages[0]) || navigator.language || 'es') || 'en';
+  // A Settings choice (ps.lang) wins. A fresh visit is English.
+  const lang = normalize(saved) || 'en';
   document.documentElement.lang = lang;
   if (lang !== 'es' && lang !== 'en') {
     const me = document.currentScript, v = me && /[?&]v=([\w-]+)/.exec(me.src);

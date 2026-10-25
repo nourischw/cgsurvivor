@@ -60,7 +60,7 @@ G.MenuUI = (() => {
     G.Sprites.drawShadow(ctx, beast.id, 198, 172, 1.15);
     anim.draw(ctx, 198, 172);
     $('menu-partner-name').textContent = app.name + ' · ' + job.name;
-    $('menu-partner-info').textContent = 'Nv. ' + ch.level + ' · ' + beast.name + (ch.unspent > 0 ? ' · ' + ch.unspent + ' puntos' : '');
+    $('menu-partner-info').textContent = 'Lv. ' + ch.level + ' · ' + beast.name + (ch.unspent > 0 ? ' · ' + ch.unspent + ' points' : '');
   }
 
   // ---------------- menú principal ----------------
