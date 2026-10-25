@@ -77,6 +77,8 @@ G.Player = class Player {
     this.inLiquid = false;
     this.lavaTick = 0;
     this.attackFace = 0;       // tiempo que sigue mirando al objetivo tras atacar
+    this.charPose = 'idle';    // idle | walk | attack | cast | down (placeholder human)
+    this.poseT = 0;
     this.dead = false;
     this.power = null;         // poder de altar activo: { def, t, dur }
     this.slowT = 0;            // pegado por una trampa
@@ -86,6 +88,10 @@ G.Player = class Player {
     this.statsTaken = {};      // mejoras de stat cogidas (condición de evolución)
     this.abil = null;          // efecto de su habilidad (data/ability-fx.js), lo pone game.js
     this.sturdyAt = -999;      // última vez que le salvó Robustez
+    // Personaje humano (v1). Si está puesto, el dibujo no es la mascota.
+    this.char = null;
+    this.appearance = null;
+    this.job = null;
   }
 
   /** Pone la habilidad (G.AbilityFX.of) y aplica lo que hace al empezar. */
@@ -114,6 +120,13 @@ G.Player = class Player {
    */
   atkFor(m) {
     const cat = m && m.cat, b = cat === 'physical' ? this.buffs.patk : cat === 'special' ? this.buffs.satk : null;
+    const buff = (b ? 1 + b.n * b.amount : 1) * (1 + this.buffs.atk.n * this.buffs.atk.amount);
+    if (this.char) {
+      const s = this.char.stats || {};
+      const stat = cat === 'special' ? (+s.mag || 0) : (+s.str || 0);
+      const scale = 0.72 + stat * 0.055 + Math.max(0, (this.char.level | 0) - 1) * 0.012;
+      return scale * this.atkMul * buff;
+    }
     return this.atk * G.Stats.fit(this.mon, cat) * (b ? 1 + b.n * b.amount : 1) * (m && this.monoType(m.type) ? Player.MONO_K : 1);
   }
   /** Monotipo (19-10-2026): los de un solo tipo pegan un +20 % con los ataques de su tipo (tienen menos variedad). */
@@ -246,6 +259,11 @@ G.Player = class Player {
     const SND = { boomerang: 'projectile', chain: 'beam', mine: 'nova', meteor: 'nova', turret: 'buff', dash: 'melee', trail: 'aura', cone: 'projectile' };
     // El rastro no suena a cada charco (sería un zumbido constante).
     if (m.kind !== 'trail') G.Audio.sfx('shot', { kind: SND[m.kind] || m.kind, type: m.type });
+    if (this.appearance) {
+      const magic = this.job && this.job.stat === 'mag';
+      this.charPose = magic ? 'cast' : 'attack';
+      this.poseT = 0.45;
+    }
     if (m.kind === 'trail') return;
     // No reinicies una animación que va por la mitad: se vería a tirones.
     if (this.anim.busy() && this.anim.progress() < 0.65) return;
@@ -315,6 +333,7 @@ G.Player = class Player {
     if (ab && ab.hurt && this.hp > 0) ab.hurt(this, type, cls);
     if (this.hp <= 0) {
       this.hp = 0; this.dead = true;
+      if (this.appearance) { this.charPose = 'down'; this.poseT = 0; }
       this.anim.play('Faint', { hold: true });
       G.Projectiles.clearOrbs(this);
       this.reviveT = 0;
@@ -338,8 +357,35 @@ G.Player = class Player {
 
   addMaxHp(amount) { this.maxHp += amount; this.hp += amount; }
 
+  /**
+   * Aplica nivel, vida, velocidad y defensa del personaje guardado.
+   * `full` rellena la vida (al empezar la run).
+   */
+  applyCharBuild(full) {
+    const ch = this.char;
+    if (!ch) return;
+    const s = ch.stats || {};
+    const prevMax = this.maxHp, prevHp = this.hp;
+    this.baseSpd = 82 + (+s.spd || 0) * 3.2;
+    this.maxHp = Math.round(64 + (+s.vit || 0) * 8 + Math.max(0, (ch.level | 0) - 1) * 3);
+    this.baseAtk = 1;
+    this.mon.df = this.mon.sd = 75;
+    this.mon.types = this.mon.types && this.mon.types.length ? this.mon.types : ['normal'];
+    if (this.appearance) this.mon.name = this.appearance.name;
+    this.dmgReduce = Math.min(0.48, (+s.def || 0) * 0.012);
+    this.cdMul = Math.max(0.58, 1 - (+s.spd || 0) * 0.008);
+    this.level = ch.level | 0;
+    this.xp = ch.level >= (G.Chars ? G.Chars.CAP : 120) ? 0 : (ch.exp || 0);
+    this.xpNext = !G.Chars || ch.level >= G.Chars.CAP ? 1 : G.Chars.expFor(ch.level);
+    this.r = 12;
+    this.bodyH = 40;
+    if (full || !(prevMax > 0)) this.hp = this.maxHp;
+    else this.hp = Math.min(this.maxHp, prevHp + Math.max(0, this.maxHp - prevMax));
+  }
+
   /** Devuelve cuántos niveles ha subido (pueden ser varios de golpe). */
   gainXp(amount) {
+    if (this.char) return this.gainCharXp(amount);
     const add = amount * this.xpMul;
     if (!Number.isFinite(add) || add <= 0) return 0;     // una experiencia infinita no acababa nunca de subir niveles
     this.xp += add;
@@ -351,6 +397,16 @@ G.Player = class Player {
       leveled++;
     }
     return leveled;
+  }
+
+  /** Experiencia del personaje (tope 120, +4 puntos por nivel). */
+  gainCharXp(amount) {
+    const n = G.Chars.gain(this.char, amount * (this.xpMul || 1));
+    this.level = this.char.level;
+    this.xp = this.char.exp;
+    this.xpNext = this.char.level >= G.Chars.CAP ? 1 : G.Chars.expFor(this.char.level);
+    if (n) this.applyCharBuild(false);
+    return n;
   }
 
   // ---------------- objeto equipado ----------------
@@ -426,6 +482,7 @@ G.Player = class Player {
         this.hurt(Math.max(1, this.maxHp * 0.14), null, true);
       }
     } else this.starving = false;
+    if (this.appearance && (this.dead || this.hunger <= 0)) { this.charPose = 'down'; this.poseT = 0; }
     if (this.dead) return;
     const s = this.spd;
     // Hielo: resbalas (la velocidad cambia despacio).
@@ -487,6 +544,18 @@ G.Player = class Player {
     const face = this.attackFace > 0 || !this.walking ? this.aim : this.moveAngle;
     this.anim.dir = G.Sprites.dirFromAngle(face);
     this.anim.loop(this.walking ? 'Walk' : 'Idle', this.walking ? s / 110 : 1);
+    this.stepPose(dt);
+  }
+
+  /** Placeholder human: still, moving, a job skill, or collapsed. */
+  stepPose(dt) {
+    if (!this.appearance) return;
+    if (this.dead || this.hunger <= 0) { this.charPose = 'down'; this.poseT = 0; return; }
+    if (this.poseT > 0) {
+      this.poseT -= dt;
+      if (this.poseT > 0) return;
+    }
+    this.charPose = this.walking ? 'walk' : 'idle';
   }
 
   /**
@@ -581,7 +650,16 @@ G.Player = class Player {
       ctx.beginPath(); ctx.ellipse(this.x, this.y, this.r * 1.5, this.r * 0.6, 0, 0, 6.2832); ctx.stroke();
       ctx.restore();
     }
-    G.Sprites.drawShadow(ctx, this.dex, this.x, this.y, this.scale);
+    if (this.appearance) {
+      G.Appear.draw(ctx, this.appearance, this.x, this.y, {
+        scale: 2, dir: this.anim.dir,
+        pose: this.charPose || (this.dead ? 'down' : this.walking ? 'walk' : 'idle'),
+        weapon: G.Appear.weaponOf(this.job && this.job.id),
+        job: this.job && this.job.id,
+        alpha: this.invuln > 0 && !this.dead ? (Math.floor(this.invuln * 18) % 2 ? 0.45 : 1) : 1,
+        flash: this.flash > 0
+      });
+    } else G.Sprites.drawShadow(ctx, this.dex, this.x, this.y, this.scale);
     // Poder de altar: aro de su color latiendo bajo los pies.
     if (this.power && !this.dead) {
       ctx.save();
@@ -591,8 +669,10 @@ G.Player = class Player {
       ctx.restore();
     }
 
-    const alpha = this.invuln > 0 && !this.dead ? (Math.floor(this.invuln * 18) % 2 ? 0.45 : 1) : 1;
-    this.anim.draw(ctx, this.x, this.y, { flash: this.flash > 0, softFlash: true, alpha, color: '#ffcb3d' });
+    if (!this.appearance) {
+      const alpha = this.invuln > 0 && !this.dead ? (Math.floor(this.invuln * 18) % 2 ? 0.45 : 1) : 1;
+      this.anim.draw(ctx, this.x, this.y, { flash: this.flash > 0, softFlash: true, alpha, color: '#ffcb3d' });
+    }
 
     // Arcos de buff alrededor de los pies.
     const COL = { atk: '#ff6b4d', patk: '#ff6b4d', satk: '#c47bff', spd: '#7fe0ff', def: '#b0b8c8', regen: '#5fe08a' };

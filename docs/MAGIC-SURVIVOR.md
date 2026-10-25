@@ -22,8 +22,9 @@ Los dos cargan los mismos `js/` sueltos. `js/app.min.js` es el bundle anterior
 y **esta página ya no lo pide**. `node tools/build.js` volvería a generar
 `index.html` con ese bundle; no hace falta para este humo.
 
-Entra como invitado, responde el test (8 preguntas) y pulsa **Jugar**.
-`WASD` o las flechas mueven. `Esc` pausa. La barra **Hambre** está bajo la vida.
+Entra como invitado (o con una cuenta local), crea un personaje y pulsa **Jugar**.
+El detalle de fichas, oficios y la mascota está en `docs/V1-CHARACTERS.md`.
+`WASD` o las flechas mueven al humano. La mascota sigue sola. `Esc` pausa. La barra **Hambre** está bajo la vida.
 
 ## Arranque y bucle
 
@@ -31,8 +32,8 @@ Entra como invitado, responde el test (8 preguntas) y pulsa **Jugar**.
 2. `js/boot.js` pone el texto de carga. El bloque `scripts:begin` … `scripts:end` carga el juego en orden y acaba en `js/game.js` y `js/main.js`.
 3. `js/main.js` espera el DOM, comprueba que `G` tenga los módulos (`NEED`) y llama a `G.Flow.boot()`.
 4. `G.Flow` (`js/game.js`) inicia la UI, `G.Game.init()` (canvas + `requestAnimationFrame`) y `G.DB.ready()`.
-5. Tras el primer gesto (pantalla «Pulsa para empezar» si el navegador no deja sonar), invitado sin compañero entra en el test; si ya hay compañero, al menú.
-6. **Jugar** llama a `G.Game.startRun()`: mundo nuevo, `G.Player`, precarga de la mascota, estado `playing`.
+5. Tras el primer gesto (pantalla «Pulsa para empezar» si el navegador no deja sonar), sin personaje se abre crear/elegir; si ya hay uno, al menú. El test de personalidad ya no es el camino.
+6. **Jugar** llama a `G.Game.startRun()`: mundo nuevo, humano (`G.Player`) y mascota (`G.Pet`), estado `playing`.
 7. Cada frame, `update(dt)` mueve al jugador, enemigos, disparos y hambre. Si `pl.dead` y no es cooperativo, a los ~1,3 s `endRun()` vuelve al menú.
 
 `G` en `dev.html` / este `index.html` está en `window` (sirve para mirar la partida en la consola). El bundle ofuscado lo escondía.
@@ -90,7 +91,7 @@ En `js/entities/player.js`, durante la run:
 
 ## Qué queda a medias
 
-- El test sigue asignando una ficha de la Pokédex; sólo cambia el dibujo.
+- El camino de juego es el personaje (ver `docs/V1-CHARACTERS.md`). El test de personalidad sigue en el código y ya no abre al entrar.
 - Gacha, grietas, legendarios, nombres de ataques y la tienda por dentro son el juego anterior.
 - El hambre en grupo no viaja por la red.
 - `node tools/build.js` no se ha lanzado: ofuscar `app.min.js` no aporta al humo y pisa el `index.html` de este corte.

@@ -6,11 +6,19 @@
  * Cada línea en español y en inglés.
  */
 G.CHANGELOG = [
+  { d: '2026-10-25', title: ['El juego arranca en inglés', 'The game starts in English'], new: [
+    ['Esta versión abre en inglés. Otro idioma sólo si lo eliges en Ajustes. Crear personaje, los huecos y subir de nivel están escritos en inglés.',
+     'This version opens in English. Another language only if you pick it in Settings. Character create, the slots, and level-up are written in English.'],
+    ['El personaje se muestra con el nombre en chino tradicional y cambia de postura (quieto, andar, ataque, magia, caído) con un dibujo de marcador.',
+     'The character uses the Traditional Chinese name and changes pose (idle, walk, attack, cast, down) with a placeholder drawing.']
+  ] },
   { d: '2026-10-24', title: ['Magical Survivor: mascotas de marcador y hambre', 'Magical Survivor: placeholder pets and hunger'], new: [
     ['La ruta jugable pasa a llamarse Magical Survivor（魔力生存）. Las mascotas se dibujan en código y la partida no descarga las hojas de sprites anteriores.',
      'The playable path is now Magical Survivor（魔力生存）. Pets are drawn in code, and a run no longer downloads the old sprite sheets.'],
     ['Hambre: baja durante la partida (más rápido si caminas). Si llega a cero, pierdes vida hasta caer. Un orbe de cura también recupera hambre.',
-     'Hunger: it drops during a run (faster while you walk). At zero you lose HP until you fall. A heal orb also restores hunger.']
+     'Hunger: it drops during a run (faster while you walk). At zero you lose HP until you fall. A heal orb also restores hunger.'],
+    ['Creas un personaje (hasta 2): apariencia, oficio, 30 puntos y una bestia. Tú te mueves; la mascota te sigue y ataca sola. Al subir de nivel (tope 120) repartes 4 puntos.',
+     'You create a character (up to 2): appearance, job, 30 points and a beast. You move; the pet follows and attacks on its own. On level-up (cap 120) you spend 4 points.']
   ] },
   { d: '2026-10-23', title: ['Ranking de daño a Arceus y Tablas', 'Arceus damage ranking and Plates'], new: [
     ["Botón de YouTube arriba, junto a Novedades: lleva al canal del juego y, cuando hay directo, se pone rojo con «EN DIRECTO» y te lleva a verlo.",
