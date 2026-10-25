@@ -2,7 +2,7 @@
 
 A character is the human you move. The pet is a separate entity: it follows you and attacks on its own.
 This is not an MMO. This path does not use Square Enix art or `assets/pokemon/` sheets.
-Appearance names 1–28 come from the public list [molibaike.com/role](https://www.molibaike.com/role). The drawing is a canvas figure. The last two names (`旅人`, `學徒`) are original fillers so the list reaches 30. There is no trademark clearance.
+Appearance names 1–28 are a checklist only. Simplified forms were noted from the public fan list [molibaike.com/role](https://www.molibaike.com/role); Traditional Chinese display names follow the same checklist’s `tc` column. Neither list, nor cg.skyey.tw, is art: this game ships no frames, sheets, or ripped client files from Square Enix, Magical Online, or Cross Gate. The human is an original canvas figure. `旅人` and `學徒` (ids 29–30) are original fillers and were not on that checklist. There is no trademark clearance.
 
 The fork starts in English. Another language is used only when `ps.lang` was saved from Settings.
 
@@ -60,6 +60,56 @@ The beast catalog is `G.Beasts.ALL` (id 1..161, placeholder names). Create shows
 
 Job names stay the Chinese product names (劍士, 戰斧鬥士, 格鬥士, 弓箭手, 忍者, 魔術師, 傳教士, 巫師, 咒術師). The gloss next to each name is English.
 
+## Display names
+
+`G.Appear` stores `sc` and `tc` for each id. The UI uses `name`, which is `tc`.
+
+| id | tc (shown) | sc (alias) |
+|---|---|---|
+| 1 | 艾咪 | 阿咪 |
+| 2 | 依露 | 艾露 |
+| 3 | 鮑 | 巴乌·哇呜 |
+| 4 | 貝堤特 | 贝堤特 |
+| 5 | 彼特 | 彼特 |
+| 6 | 博克 | 伯克 |
+| 7 | 貝依 | 菲特 |
+| 8 | 福爾蒂雅 | 福尔蒂雅 |
+| 9 | 葛蕾絲 | 葛蕾丝 |
+| 10 | 荷蜜 | 荷蜜 |
+| 11 | 凱茵 | 卡伊 |
+| 12 | 凱茲 | 卡兹 |
+| 13 | 凱 | 凯 |
+| 14 | 蘭斯洛特 | 兰斯洛特 |
+| 15 | 麗 | 丽 |
+| 16 | 綾女 | 绫女 |
+| 17 | 梅古 | 梅古 |
+| 18 | 萌子 | 萌子 |
+| 19 | 尼爾森 | 尼尔森 |
+| 20 | 萍萍 | 萍萍 |
+| 21 | 莎拉 | 莎拉 |
+| 22 | 托普 | 托布 |
+| 23 | 威斯凱爾 | 威斯凯尔 |
+| 24 | 烏嚕 | 乌噜 |
+| 25 | 夏菈 | 夏拉 |
+| 26 | 謝堤 | 谢堤 |
+| 27 | 西恩 | 辛 |
+| 28 | 左藏 | 左藏 |
+| 29 | 旅人 | 旅人 |
+| 30 | 學徒 | 學徒 |
+
+## Poses and weapons
+
+Placeholder states on the human (`player.charPose`): `idle` (still), `walk` (WASD), `attack` (a physical job’s skill fires), `cast` (a magic job’s skill fires), `down` (HP reaches 0 or hunger hits 0). Each state is a different canvas silhouette. Attack and cast add a simple weapon cue. Spear (`用槍`) can be drawn if the weapon id is `spear`; no v1 job selects it.
+
+| Job | Weapon id | Cue |
+|---|---|---|
+| 劍士 sword | sword | 執劍 |
+| 戰斧鬥士 axe | axe | 持斧 |
+| 格鬥士 brawl, 忍者 ninja | fist | 空手 |
+| 弓箭手 bow | bow | 舉弓 |
+| 魔術師 mage, 傳教士 priest, 巫師 wizard, 咒術師 curse | staff | 拿杖 |
+| (none yet) | spear | 用槍 |
+
 ## Still stubbed
 
 - Gacha, Pokédex, the shop, rifts, and the personality test remain in the menu or in the code, off this path.
@@ -82,6 +132,8 @@ Chromium smoke on 24 Oct 2026 against `http://127.0.0.1:8765/index.html` (static
 **Cap of 2.** A second `createChar` (艾露, 魔術師) succeeded; the third returned `{ ok:false, error:'Máximo 2 personajes.' }` on that build. The screen had two cells, the notice to delete one before creating another, and the cards `阿咪 · 劍士 · Nv.3` and `艾露 · 魔術師 · Nv.1`. There is no third slot. The error string is now `Maximum of 2 characters.`
 
 **Local account.** Sign-up `mslocal24` → 魔術師, 4/2/4/4/16 (magic 16), Kafen-002. `localStorage` `ps.save.mslocal24`: 1 character, stat sum 30, `activeChar` 0. After reload the menu was still `阿咪 · 魔術師` / `Nv. 1 · Kafen-002` without creating again. Play: skills `job-bolt`, `job-ice`, `job-burst`. `KeyD` for 0.9 s: +85 on x, pet behind, hunger −1.9, `controlled === false`, placeholders on.
+
+**Poses and Traditional Chinese names (25 Oct 2026).** Same browser, storage cleared, gstatic/Firebase blocked. Create showed `艾咪` (alias `阿咪` kept on the data). Menu: `艾咪 · 劍士`. Holding D set `charPose` to `walk` with weapon `sword`; releasing it returned `idle`. A dummy enemy in front of the swordsman produced `attack` (seen poses `idle`, `attack`). No request or resource for `/assets/pokemon/`, skyey, or Square Enix. `旅人` is an original filler. Spear is in `G.Appear.WEAPONS` and is not chosen by any v1 job.
 
 **English UI (25 Oct 2026).** Fresh Chromium load of `index.html` with `localStorage` cleared and gstatic/Firebase blocked. `ps.lang` was null, `document.documentElement.lang` and `G.I18n.lang` were `en`. Boot copy: “explore, watch your hunger, survive.” / “Loading…”. Title: `Magical Survivor（魔力生存）– browser survival`. Login tab “Log in”, button “Play as guest”.
 

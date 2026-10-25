@@ -77,6 +77,8 @@ G.Player = class Player {
     this.inLiquid = false;
     this.lavaTick = 0;
     this.attackFace = 0;       // tiempo que sigue mirando al objetivo tras atacar
+    this.charPose = 'idle';    // idle | walk | attack | cast | down (placeholder human)
+    this.poseT = 0;
     this.dead = false;
     this.power = null;         // poder de altar activo: { def, t, dur }
     this.slowT = 0;            // pegado por una trampa
@@ -257,6 +259,11 @@ G.Player = class Player {
     const SND = { boomerang: 'projectile', chain: 'beam', mine: 'nova', meteor: 'nova', turret: 'buff', dash: 'melee', trail: 'aura', cone: 'projectile' };
     // El rastro no suena a cada charco (sería un zumbido constante).
     if (m.kind !== 'trail') G.Audio.sfx('shot', { kind: SND[m.kind] || m.kind, type: m.type });
+    if (this.appearance) {
+      const magic = this.job && this.job.stat === 'mag';
+      this.charPose = magic ? 'cast' : 'attack';
+      this.poseT = 0.45;
+    }
     if (m.kind === 'trail') return;
     // No reinicies una animación que va por la mitad: se vería a tirones.
     if (this.anim.busy() && this.anim.progress() < 0.65) return;
@@ -326,6 +333,7 @@ G.Player = class Player {
     if (ab && ab.hurt && this.hp > 0) ab.hurt(this, type, cls);
     if (this.hp <= 0) {
       this.hp = 0; this.dead = true;
+      if (this.appearance) { this.charPose = 'down'; this.poseT = 0; }
       this.anim.play('Faint', { hold: true });
       G.Projectiles.clearOrbs(this);
       this.reviveT = 0;
@@ -474,6 +482,7 @@ G.Player = class Player {
         this.hurt(Math.max(1, this.maxHp * 0.14), null, true);
       }
     } else this.starving = false;
+    if (this.appearance && (this.dead || this.hunger <= 0)) { this.charPose = 'down'; this.poseT = 0; }
     if (this.dead) return;
     const s = this.spd;
     // Hielo: resbalas (la velocidad cambia despacio).
@@ -535,6 +544,18 @@ G.Player = class Player {
     const face = this.attackFace > 0 || !this.walking ? this.aim : this.moveAngle;
     this.anim.dir = G.Sprites.dirFromAngle(face);
     this.anim.loop(this.walking ? 'Walk' : 'Idle', this.walking ? s / 110 : 1);
+    this.stepPose(dt);
+  }
+
+  /** Placeholder human: still, moving, a job skill, or collapsed. */
+  stepPose(dt) {
+    if (!this.appearance) return;
+    if (this.dead || this.hunger <= 0) { this.charPose = 'down'; this.poseT = 0; return; }
+    if (this.poseT > 0) {
+      this.poseT -= dt;
+      if (this.poseT > 0) return;
+    }
+    this.charPose = this.walking ? 'walk' : 'idle';
   }
 
   /**
@@ -631,8 +652,10 @@ G.Player = class Player {
     }
     if (this.appearance) {
       G.Appear.draw(ctx, this.appearance, this.x, this.y, {
-        scale: 2, dir: this.anim.dir, walking: this.walking && !this.dead,
-        swing: this.attackFace, job: this.job && this.job.id,
+        scale: 2, dir: this.anim.dir,
+        pose: this.charPose || (this.dead ? 'down' : this.walking ? 'walk' : 'idle'),
+        weapon: G.Appear.weaponOf(this.job && this.job.id),
+        job: this.job && this.job.id,
         alpha: this.invuln > 0 && !this.dead ? (Math.floor(this.invuln * 18) % 2 ? 0.45 : 1) : 1,
         flash: this.flash > 0
       });

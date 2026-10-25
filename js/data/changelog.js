@@ -8,7 +8,9 @@
 G.CHANGELOG = [
   { d: '2026-10-25', title: ['El juego arranca en inglés', 'The game starts in English'], new: [
     ['Esta versión abre en inglés. Otro idioma sólo si lo eliges en Ajustes. Crear personaje, los huecos y subir de nivel están escritos en inglés.',
-     'This version opens in English. Another language only if you pick it in Settings. Character create, the slots, and level-up are written in English.']
+     'This version opens in English. Another language only if you pick it in Settings. Character create, the slots, and level-up are written in English.'],
+    ['El personaje se muestra con el nombre en chino tradicional y cambia de postura (quieto, andar, ataque, magia, caído) con un dibujo de marcador.',
+     'The character uses the Traditional Chinese name and changes pose (idle, walk, attack, cast, down) with a placeholder drawing.']
   ] },
   { d: '2026-10-24', title: ['Magical Survivor: mascotas de marcador y hambre', 'Magical Survivor: placeholder pets and hunger'], new: [
     ['La ruta jugable pasa a llamarse Magical Survivor（魔力生存）. Las mascotas se dibujan en código y la partida no descarga las hojas de sprites anteriores.',
